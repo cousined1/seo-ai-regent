@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  EDITOR
+  EDITORIAL
+  SYNDICATE
+}
+
+enum UserRole {
+  MEMBER
+  ADMIN
+}
+
+enum ArticleStatus {
+  DRAFT
+  READY
+  PUBLISHED
+}
+
+model User {
+  id              String               @id @default(cuid())
+  email           String               @unique
+  name            String?
+  image           String?
+  passwordHash    String?
+  role            UserRole             @default(MEMBER)
+  mfaSecret       String?
+  mfaEnabled      Boolean              @default(false)
+  sessionVersion  Int                  @default(1)
+  plan            Plan                 @default(FREE)
+  stripeId        String?              @unique
+  articles        Article[]
+  audits          Audit[]
+  keywords        Keyword[]
+  resetTokens     PasswordResetToken[]
+  webhookEvents   StripeWebhookEvent[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model Article {
+  id             String        @id @default(cuid())
+  userId         String
+  title          String
+  content        Json
+  keyword        String
+  contentScore   Int           @default(0)
+  geoScore       Int?
+  wordCount      Int           @default(0)
+  readability    Float?
+  status         ArticleStatus @default(DRAFT)
+  serpData       Json?
+  nlpTerms       Json?
+  scoreBreakdown Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id])
+  audits         Audit[]
+
+  @@index([userId])
+  @@index([keyword])
+}
+
+model Audit {
+  id           String   @id @default(cuid())
+  userId       String
+  articleId    String
+  contentScore Int
+  geoScore     Int
+  findings     Json
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  article      Article  @relation(fields: [articleId], references: [id])
+
+  @@index([userId])
+  @@index([articleId])
+}
+
+model Keyword {
+  id        String   @id @default(cuid())
+  userId    String?
+  query     String
+  serpData  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([query])
+}
+
+model ScoreSnapshot {
+  id          String   @id @default(cuid())
+  keyword     String
+  contentHash String
+  resultData  Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([keyword, contentHash])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StripeWebhookEvent {
+  id             String   @id @default(cuid())
+  eventId        String   @unique
+  eventType      String
+  userId         String?
+  payloadSummary Json?
+  processedAt    DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([processedAt])
+}
+
+model RateLimitWindow {
+  id        String   @id @default(cuid())
+  bucketKey String   @unique
+  count     Int
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}

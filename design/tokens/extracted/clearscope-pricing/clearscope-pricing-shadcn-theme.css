@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://www.clearscope.io/pricing */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 60 8% 95%;
+    --foreground: 0 0% 0%;
+    --primary: 0 98% 17%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 41% 91%;
+    --secondary-foreground: 0 0% 0%;
+    --accent: 0 100% 88%;
+    --accent-foreground: 0 0% 0%;
+    --muted: 0 0% 76%;
+    --muted-foreground: 0 0% 0%;
+    --border: 0 0% 76%;
+    --radius: 6px;
+  }
+}

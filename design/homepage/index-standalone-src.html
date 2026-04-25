@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>SEO AI Regent — Content scoring for Google and AI search</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<meta name="ext-resource-dependency" content="https://cdn.jsdelivr.net/npm/three-globe@2.24.4/example/img/earth-dark.jpg" data-resource-id="earthDark" />
+
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-elev: #111111;
+    --bg-card: #141414;
+    --line: #1F1F1F;
+    --line-2: #2A2A2A;
+    --text: #F5F5F5;
+    --text-2: #A0A0A0;
+    --text-3: #6B6B6B;
+    --accent: #06B6D4;
+    --accent-dim: #0891B2;
+    --score-excellent: #22C55E;
+    --score-good: #84CC16;
+    --score-fair: #F59E0B;
+    --score-poor: #EF4444;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-feature-settings: 'ss01', 'ss02', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  .mono { font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-feature-settings: 'zero'; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+  ::selection { background: var(--accent); color: #000; }
+
+  /* Editorial rule */
+  .rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+  .rule-bright { height: 1px; background: var(--line-2); border: 0; }
+
+  /* Container */
+  .container { max-width: 1360px; margin: 0 auto; padding: 0 48px; }
+  .container-tight { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+
+  /* Small bits */
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .eyebrow-accent { color: var(--accent); }
+  .tick { color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-weight: 500; font-size: 15px;
+    border: 1px solid transparent;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #001418; }
+  .btn-primary:hover { background: #22D3EE; }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--line-2); }
+  .btn-secondary:hover { border-color: #3A3A3A; background: #151515; }
+  .btn-ghost { background: transparent; color: var(--text-2); padding: 10px 12px; }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* Links with arrow */
+  .link-arrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--accent); font-weight: 500; font-size: 14px;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+  }
+  .link-arrow:hover { border-bottom-color: var(--accent); }
+
+  /* Nav */
+  nav.rf-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,10,10,0.78);
+    backdrop-filter: saturate(140%) blur(12px);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.rf-nav .inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; padding: 0 48px; max-width: 1440px; margin: 0 auto;
+  }
+  nav.rf-nav .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 17px; letter-spacing: -0.01em;
+  }
+  nav.rf-nav .logo-mark {
+    width: 22px; height: 22px; position: relative;
+    background: linear-gradient(135deg, var(--accent) 0%, #0369A1 100%);
+    border-radius: 4px;
+    display: inline-block;
+  }
+  nav.rf-nav .logo-mark::after {
+    content: ''; position: absolute; inset: 4px;
+    background: var(--bg); border-radius: 2px;
+  }
+  nav.rf-nav .logo-mark::before {
+    content: ''; position: absolute; left: 9px; top: 4px; bottom: 4px; width: 4px;
+    background: var(--accent); z-index: 2; border-radius: 1px;
+  }
+  nav.rf-nav ul {
+    display: flex; gap: 28px; list-style: none; margin: 0; padding: 0;
+    font-size: 14px; color: var(--text-2);
+  }
+  nav.rf-nav ul a:hover { color: var(--text); }
+  nav.rf-nav .cta-group { display: flex; gap: 8px; align-items: center; }
+
+  /* Ticker */
+  .ticker {
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    background: #060606;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+  .ticker-inner {
+    display: flex; gap: 56px; white-space: nowrap; padding: 10px 0;
+    animation: ticker 60s linear infinite;
+    width: max-content;
+  }
+  .ticker-item { display: inline-flex; align-items: center; gap: 10px; }
+  .ticker-item .dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+  .ticker-item .up { color: var(--score-excellent); }
+  .ticker-item .down { color: var(--score-poor); }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Section heading pattern */
+  .section { padding: 120px 0; border-bottom: 1px solid var(--line); position: relative; }
+  .section-head { display: grid; grid-template-columns: 220px 1fr; gap: 48px; margin-bottom: 56px; align-items: start; }
+  .section-head .meta { display: flex; flex-direction: column; gap: 12px; }
+  .section-head .meta .num { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-3); letter-spacing: 0.1em; }
+  .section-head h2 {
+    font-size: 56px; line-height: 1.04; letter-spacing: -0.025em;
+    font-weight: 600; margin: 0; max-width: 900px;
+  }
+  .section-head .lede {
+    color: var(--text-2); font-size: 18px; line-height: 1.55; margin-top: 16px; max-width: 680px;
+  }
+
+  /* Status / ping */
+  .pill-live {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 10px 5px 8px; border: 1px solid var(--line-2);
+    border-radius: 999px; font-family: 'Geist Mono', monospace;
+    font-size: 11px; color: var(--text-2); letter-spacing: 0.06em;
+  }
+  .pill-live .ping {
+    position: relative; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--score-excellent);
+  }
+  .pill-live .ping::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--score-excellent); opacity: 0.35; animation: pingPulse 1.6s ease-out infinite;
+  }
+  @keyframes pingPulse { 0% { transform: scale(0.4); opacity: 0.45; } 100% { transform: scale(1.6); opacity: 0; } }
+
+  /* Score chip */
+  .score-chip {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    font-family: 'Geist Mono', monospace; font-size: 12px;
+    padding: 4px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--line-2);
+  }
+  .score-chip .val { font-weight: 600; }
+  .score-chip.excellent { color: var(--score-excellent); border-color: rgba(34,197,94,0.3); }
+  .score-chip.good { color: var(--score-good); border-color: rgba(132,204,22,0.3); }
+  .score-chip.fair { color: var(--score-fair); border-color: rgba(245,158,11,0.3); }
+  .score-chip.poor { color: var(--score-poor); border-color: rgba(239,68,68,0.3); }
+
+  /* Hero layout */
+  .hero {
+    position: relative; padding: 120px 0 140px; overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    min-height: 780px;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .hero-bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 70% at 20% 50%, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.55) 40%, rgba(10,10,10,0) 70%),
+      linear-gradient(180deg, rgba(10,10,10,0.4) 0%, rgba(10,10,10,0) 30%, rgba(10,10,10,0) 70%, rgba(10,10,10,0.9) 100%);
+    pointer-events: none;
+  }
+  .hero .container { position: relative; z-index: 2; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px;
+    align-items: center;
+    min-height: 520px;
+  }
+  .hero-hud {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; gap: 14px;
+    align-items: flex-end;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    color: var(--text-3); letter-spacing: 0.06em;
+  }
+  .hero-hud .hud-block {
+    border: 1px solid var(--line-2); border-radius: 10px;
+    padding: 14px 16px; min-width: 220px;
+    background: rgba(8,8,8,0.55); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .hero-hud .hud-block .row { display: flex; justify-content: space-between; gap: 20px; }
+  .hero-hud .k { color: var(--text-3); }
+  .hero-hud .v { color: var(--accent); }
+  .hero-hud .city-title {
+    font-family: 'Geist', sans-serif; text-transform: none;
+    font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: var(--text);
+    margin-top: 4px;
+  }
+  .hero-hud .acq { color: var(--accent); font-weight: 600; }
+  .hero-hud .acq.locked { color: var(--score-excellent); }
+  .hero h1 {
+    font-size: 84px; line-height: 0.98; letter-spacing: -0.035em;
+    font-weight: 600; margin: 0; text-wrap: pretty;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .sub {
+    color: var(--text-2); font-size: 19px; line-height: 1.5;
+    max-width: 540px; margin-top: 28px;
+  }
+  .hero-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    margin-top: 48px;
+    font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--text-3);
+  }
+  .hero-split {
+    display: flex; gap: 10px; margin-top: 36px; align-items: stretch;
+  }
+  .hero-keyword {
+    display: flex; align-items: center; gap: 0;
+    background: transparent; border: 1px solid var(--line-2); border-radius: 10px;
+    overflow: hidden; flex: 1; max-width: 440px;
+    transition: border-color 120ms;
+  }
+  .hero-keyword:focus-within { border-color: var(--accent); }
+  .hero-keyword .prefix {
+    padding: 0 14px; font-family: 'Geist Mono', monospace; font-size: 13px;
+    color: var(--text-3); border-right: 1px solid var(--line);
+    height: 100%; display: flex; align-items: center;
+  }
+  .hero-keyword input {
+    flex: 1; background: transparent; border: 0; outline: 0;
+    color: var(--text); font-size: 15px; font-family: inherit;
+    padding: 14px 14px;
+  }
+  .hero-keyword input::placeholder { color: var(--text-3); }
+  .hero-keyword button {
+    background: var(--accent); color: #001418; border: 0;
+    padding: 0 18px; font-weight: 600; font-size: 14px;
+  }
+  .hero-keyword button:hover { background: #22D3EE; }
+
+  /* (legacy hero-stage styles removed) */
+
+  /* Trust bar */
+  .trust {
+    padding: 28px 0; border-bottom: 1px solid var(--line);
+    background: #080808;
+  }
+  .trust .inner {
+    display: flex; align-items: center; gap: 48px; flex-wrap: wrap;
+  }
+  .trust .label {
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .trust .logos { display: flex; gap: 40px; align-items: center; color: var(--text-2); flex: 1; flex-wrap: wrap; }
+  .trust .logo-row { font-weight: 600; font-size: 18px; letter-spacing: -0.02em; opacity: 0.75; }
+
+  /* How it works */
+  .hiw {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line); border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .hiw-step {
+    background: var(--bg);
+    padding: 32px 28px;
+    display: flex; flex-direction: column; gap: 16px;
+    min-height: 260px;
+  }
+  .hiw-step .step-n {
+    font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+  .hiw-step h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+  .hiw-step p { color: var(--text-2); font-size: 14px; margin: 0; }
+  .hiw-step .visual {
+    margin-top: auto; padding-top: 20px;
+    border-top: 1px dashed var(--line-2);
+    font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  /* Feature narrative (asymmetric) */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 16px;
+  }
+  .feat {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: var(--radius-lg); padding: 28px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .feat .tag { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.08em; }
+  .feat h3 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  .feat p { color: var(--text-2); font-size: 14px; line-height: 1.55; margin: 0; }
+  .feat.a { grid-column: span 4; grid-row: span 2; min-height: 380px; }
+  .feat.b { grid-column: span 2; grid-row: span 2; min-height: 380px; }
+  .feat.c { grid-column: span 2; }
+  .feat.d { grid-column: span 2; }
+  .feat.e { grid-column: span 2; }
+
+  /* Comparison table */
+  .cmp {
+    border: 1px solid var(--line); border-radius: var(--radius-lg);
+    overflow: hidden; background: var(--bg-card);
+  }
+  .cmp-head, .cmp-row {
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+  }
+  .cmp-head { background: #0d0d0d; border-bottom: 1px solid var(--line); }
+  .cmp-head > div {
+    padding: 18px 20px; font-family: 'Geist Mono', monospace;
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase;
+  }
+  .cmp-head .brand-col {
+    color: var(--text); font-family: 'Geist', sans-serif; text-transform: none;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .cmp-head .brand-rf {
+    color: var(--accent); font-family: 'Geist', sans-serif; text-transform: none;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .cmp-row { border-top: 1px solid var(--line); transition: background 120ms; }
+  .cmp-row:hover { background: #0f0f0f; }
+  .cmp-row > div { padding: 22px 20px; font-size: 15px; }
+  .cmp-row .feat-name { color: var(--text); font-weight: 500; }
+  .cmp-row .feat-desc { display: block; color: var(--text-3); font-size: 12px; margin-top: 4px; font-family: 'Geist Mono', monospace; }
+  .cmp-row .v { color: var(--text-2); font-family: 'Geist Mono', monospace; font-size: 13px; }
+  .cmp-row .v.yes { color: var(--score-excellent); }
+  .cmp-row .v.no { color: var(--score-poor); opacity: 0.85; }
+  .cmp-row .v.limited { color: var(--score-fair); }
+  .cmp-row .v.rf { color: var(--accent); font-weight: 600; }
+
+  .cmp-row.anchor {
+    background: linear-gradient(90deg, rgba(6,182,212,0.06) 0%, rgba(6,182,212,0.02) 100%);
+    border-top: 1px solid rgba(6,182,212,0.25);
+    border-bottom: 1px solid rgba(6,182,212,0.25);
+  }
+  .cmp-row.anchor .feat-name { color: #fff; font-weight: 600; }
+  .cmp-row.anchor .v.rf { font-weight: 700; }
+
+  .cmp-row .v .x-mark, .cmp-row .v .check, .cmp-row .v .dash {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 4px; margin-right: 8px;
+    font-weight: 700;
+  }
+  .cmp-row .v.yes .check { background: rgba(34,197,94,0.12); color: var(--score-excellent); }
+  .cmp-row .v.no .x-mark { background: rgba(239,68,68,0.08); color: var(--score-poor); }
+  .cmp-row .v.limited .dash { background: rgba(245,158,11,0.12); color: var(--score-fair); }
+  .cmp-row .v.rf .check { background: rgba(6,182,212,0.15); color: var(--accent); }
+
+  /* Testimonials */
+  .testimonials {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+  .quote {
+    border: 1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 32px; background: var(--bg-card);
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .quote .body {
+    font-size: 19px; line-height: 1.45; letter-spacing: -0.01em;
+    color: var(--text); font-weight: 400;
+  }
+  .quote .body::before { content: '\u201C'; display: block; font-size: 48px; line-height: 0.5; color: var(--accent); font-family: serif; margin-bottom: 12px; }
+  .quote .attr {
+    display: flex; align-items: center; gap: 12px; margin-top: auto;
+    padding-top: 20px; border-top: 1px solid var(--line);
+  }
+  .quote .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border: 1px solid var(--line-2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-2);
+  }
+  .quote .name { font-weight: 600; font-size: 14px; }
+  .quote .role { color: var(--text-3); font-size: 12px; font-family: 'Geist Mono', monospace; }
+
+  /* Pricing */
+  .pricing {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
+    background: var(--bg-card);
+  }
+  .plan {
+    padding: 40px 32px; display: flex; flex-direction: column; gap: 24px;
+    border-right: 1px solid var(--line);
+  }
+  .plan:last-child { border-right: 0; }
+  .plan.featured { background: linear-gradient(180deg, rgba(6,182,212,0.06) 0%, rgba(6,182,212,0) 60%); }
+  .plan .name { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; }
+  .plan .name.featured { color: var(--accent); }
+  .plan .price {
+    display: flex; align-items: baseline; gap: 4px;
+    font-size: 56px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;
+  }
+  .plan .price .currency { font-size: 24px; color: var(--text-3); font-weight: 400; }
+  .plan .price .unit { font-size: 14px; color: var(--text-3); font-weight: 400; margin-left: 6px; }
+  .plan .blurb { color: var(--text-2); font-size: 14px; line-height: 1.5; }
+  .plan ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .plan li { display: flex; gap: 12px; font-size: 14px; color: var(--text-2); align-items: baseline; }
+  .plan li .check { color: var(--accent); font-family: 'Geist Mono', monospace; font-size: 12px; flex-shrink: 0; width: 16px; }
+  .plan li strong { color: var(--text); font-weight: 500; }
+
+  /* FAQ */
+  .faq {
+    border-top: 1px solid var(--line);
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--line); padding: 28px 0;
+    display: grid; grid-template-columns: 60px 1fr 40px; gap: 24px;
+    align-items: start; cursor: pointer; transition: background 120ms;
+  }
+  .faq-item:hover { background: rgba(255,255,255,0.01); }
+  .faq-item .num { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-3); padding-top: 2px; }
+  .faq-item .q { font-size: 19px; font-weight: 500; letter-spacing: -0.01em; }
+  .faq-item .a { color: var(--text-2); font-size: 15px; line-height: 1.6; margin-top: 12px; display: none; max-width: 680px; }
+  .faq-item.open .a { display: block; }
+  .faq-item .toggle { font-family: 'Geist Mono', monospace; color: var(--text-3); font-size: 18px; text-align: right; padding-top: 0; user-select: none; }
+  .faq-item.open .toggle { color: var(--accent); }
+
+  /* Final CTA */
+  .final-cta {
+    padding: 160px 0; border-bottom: 1px solid var(--line);
+    position: relative; overflow: hidden;
+  }
+  .final-cta h2 {
+    font-size: 110px; line-height: 0.95; letter-spacing: -0.04em; font-weight: 600;
+    margin: 0; max-width: 1100px;
+  }
+  .final-cta h2 em { font-style: normal; color: var(--accent); }
+  .final-cta .sub { color: var(--text-2); font-size: 20px; max-width: 600px; margin-top: 32px; }
+  .final-cta .ctas { margin-top: 56px; display: flex; gap: 12px; }
+
+  /* Footer */
+  footer {
+    padding: 72px 0 40px;
+    background: #060606;
+    font-size: 13px; color: var(--text-3);
+  }
+  footer .top {
+    display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 48px;
+    padding-bottom: 56px; border-bottom: 1px solid var(--line);
+  }
+  footer .brand { display: flex; flex-direction: column; gap: 16px; max-width: 320px; }
+  footer .brand .bn { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 16px; }
+  footer .brand p { color: var(--text-3); font-size: 13px; line-height: 1.55; }
+  footer h4 { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin: 0 0 16px; font-weight: 500; }
+  footer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  footer ul a { color: var(--text-2); font-size: 13px; }
+  footer ul a:hover { color: var(--text); }
+  footer .bottom {
+    display: flex; justify-content: space-between; padding-top: 32px; align-items: center;
+    font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.05em;
+  }
+
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed; bottom: 20px; right: 20px; z-index: 100;
+    background: #0d0d0d; border: 1px solid var(--line-2);
+    border-radius: 12px; padding: 18px; width: 280px;
+    display: none; flex-direction: column; gap: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    font-size: 13px;
+  }
+  .tweaks.visible { display: flex; }
+  .tweaks h4 { margin: 0; font-size: 13px; font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; font-weight: 500; }
+  .tweaks .row { display: flex; flex-direction: column; gap: 6px; }
+  .tweaks .row > label { font-size: 12px; color: var(--text-2); display: flex; justify-content: space-between; }
+  .tweaks .row > label .val { font-family: 'Geist Mono', monospace; color: var(--text-3); }
+  .tweaks input[type=range] { width: 100%; accent-color: var(--accent); }
+  .tweaks .swatches { display: flex; gap: 8px; }
+  .tweaks .swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid transparent; cursor: pointer; }
+  .tweaks .swatch.active { border-color: var(--text); }
+  .tweaks label.chk { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); cursor: pointer; }
+
+  /* Hide scrollbars we don't want */
+
+
+  /* Big quote display block (in feature narrative) */
+  .feat-visual-score {
+    display: flex; align-items: center; gap: 24px; margin-top: 8px;
+  }
+  .mini-ring { width: 88px; height: 88px; position: relative; }
+  .mini-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .mini-ring .num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-weight: 600; }
+  .mini-ring .num .n { font-size: 22px; color: var(--text); }
+  .mini-ring .num .lbl { font-size: 9px; color: var(--text-3); letter-spacing: 0.06em; }
+
+  /* Small signal bars used in feature cards */
+  .sig-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .sig-row { display: grid; grid-template-columns: 1fr 60px 36px; gap: 10px; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; }
+  .sig-row .name { color: var(--text-2); }
+  .sig-row .bar { height: 4px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+  .sig-row .bar .fill { height: 100%; background: var(--accent); }
+  .sig-row .pct { color: var(--text-3); text-align: right; }
+  .sig-row.ex .fill { background: var(--score-excellent); }
+  .sig-row.gd .fill { background: var(--score-good); }
+  .sig-row.fr .fill { background: var(--score-fair); }
+  .sig-row.pr .fill { background: var(--score-poor); }
+
+  /* SERP mock */
+  .serp-mock { display: flex; flex-direction: column; gap: 10px; }
+  .serp-row {
+    display: grid; grid-template-columns: 22px 1fr 60px;
+    gap: 10px; align-items: center;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    background: #0c0c0c;
+  }
+  .serp-row .rank { color: var(--text-3); }
+  .serp-row .url { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .serp-row .sc { text-align: right; color: var(--score-good); }
+  .serp-row.highlight { border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.04); }
+  .serp-row.highlight .url { color: var(--accent); }
+
+  /* AI writer mock */
+  .aiw-lines { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .aiw-lines .l { height: 8px; background: var(--line-2); border-radius: 2px; }
+  .aiw-lines .l.short { width: 70%; }
+  .aiw-lines .l.mid { width: 90%; }
+  .aiw-lines .typing { width: 30%; background: var(--accent); position: relative; }
+  .aiw-lines .typing::after {
+    content: ''; position: absolute; right: -10px; top: -2px; width: 2px; height: 12px;
+    background: var(--accent); animation: blink 0.8s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Ambient grid bg for finalCTA */
+  .grid-bg {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.18;
+    background-image:
+      linear-gradient(var(--line-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 40%, transparent 100%);
+  }
+
+  /* Testimonial rating row */
+  .stars { display: inline-flex; gap: 2px; color: var(--accent); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<!-- Nav -->
+<nav class="rf-nav">
+  <div class="inner">
+    <div class="logo">
+      <span class="logo-mark"></span>
+      SEO AI Regent
+    </div>
+    <ul>
+      <li><a href="#product">Product</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#compare">Compare</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#docs">Docs</a></li>
+    </ul>
+    <div class="cta-group">
+      <a class="btn btn-ghost" href="#signin">Sign in</a>
+      <a class="btn btn-secondary" href="#demo">Try live demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="product">
+  <div class="hero-bg">
+    <canvas id="globeCanvas"></canvas>
+  </div>
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow" style="margin-bottom: 24px;">
+          <span style="color: var(--accent);">01 /</span> Content scoring, dual protocol
+        </div>
+        <h1>
+          Score content for<br/>
+          Google <em>and</em> AI search.<br/>
+          <span style="color: var(--text-3);">Before you publish.</span>
+        </h1>
+        <p class="sub">
+          SEO AI Regent is the first authority platform to score content on two equal axes —
+          traditional rankings and AI-mediated retrieval — from one canonical model.
+          Write in a clean canvas. Watch the scoring engine think, in real time.
+        </p>
+
+        <form class="hero-split" onsubmit="event.preventDefault(); document.getElementById('demo').scrollIntoView({behavior:'smooth'});">
+          <div class="hero-keyword">
+            <span class="prefix mono">kw //</span>
+            <input placeholder="content optimization strategies" id="heroKw" />
+            <button type="submit">Start free &rarr;</button>
+          </div>
+          <a class="btn btn-secondary" href="#demo">Try live demo</a>
+        </form>
+
+        <div class="hero-meta">
+          <span>NO CARD REQUIRED · 7-DAY TRIAL · CANCEL ANYTIME</span>
+          <span class="pill-live"><span class="ping"></span>LIVE · 12,847 docs scoring now</span>
+        </div>
+      </div>
+
+      <div class="hero-hud">
+        <div class="hud-block">
+          <div class="row"><span class="k">FEED</span><span class="v">RF-GEO / INDEX.v4</span></div>
+          <div class="row"><span class="k">LAT</span><span class="v" id="coordLat">40.7128° N</span></div>
+          <div class="row"><span class="k">LNG</span><span class="v" id="coordLng">74.0060° W</span></div>
+          <div class="row"><span class="k">AZ</span><span class="v" id="hudAz">127.4°</span></div>
+          <div class="row"><span class="k">EL</span><span class="v" id="hudEl">+42.1°</span></div>
+          <div class="row"><span class="k">ALT</span><span class="v" id="hudAlt">24.8k</span></div>
+          <div class="row"><span class="k">SIG</span><span class="v" id="hudSig">0.982</span></div>
+        </div>
+        <div class="hud-block" style="align-items: flex-start;">
+          <span class="acq" id="acqState">[ ACQUIRING ]</span>
+          <span class="city-title" id="cityLabel">Indexing…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust">
+  <div class="container">
+    <div class="inner">
+      <span class="label">TRUSTED BY EDITORIAL &amp; GROWTH TEAMS AT</span>
+      <div class="logos">
+        <div class="logo-row">ATLAS &amp; ORE</div>
+        <div class="logo-row">NORTHWIND</div>
+        <div class="logo-row">KERNEL/CO</div>
+        <div class="logo-row">PROMPTFOLIO</div>
+        <div class="logo-row">RAVEN LABS</div>
+        <div class="logo-row">UMBRA GROUP</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">03 / HOW IT WORKS</span>
+        <span class="eyebrow eyebrow-accent">THE LOOP</span>
+      </div>
+      <div>
+        <h2>Keyword to canonical score, in four tight moves.</h2>
+        <p class="lede">
+          One scoring brain. Four surfaces. The same <span class="mono" style="color: var(--accent);">explainScore()</span> output
+          drives the lockup, your Top 3 Actions, the terms panel, and the signal breakdown — so what
+          you see, what you do, and why you're rewarded never drift apart.
+        </p>
+      </div>
+    </div>
+
+    <div class="hiw">
+      <div class="hiw-step">
+        <div class="step-n">STEP 01</div>
+        <h3>Enter a keyword</h3>
+        <p>Keyword-first onboarding creates commitment. We pull live SERP for your market and build the target corpus.</p>
+        <div class="visual">
+          <span style="color: var(--accent);">kw //</span> <span>content optimization</span>
+          <span>→ 42 SERPs · 18 entities · 3.2s</span>
+        </div>
+      </div>
+      <div class="hiw-step">
+        <div class="step-n">STEP 02</div>
+        <h3>Canvas loads clean</h3>
+        <p>TipTap surface, no noise. Focus mode is the default; assisted guidance is opt-in via <span class="mono" style="color: var(--accent);">⌘⇧H</span>.</p>
+        <div class="visual">
+          <span>[ clean canvas ]</span>
+          <span>assisted: OFF</span>
+          <span>focus: ON</span>
+        </div>
+      </div>
+      <div class="hiw-step">
+        <div class="step-n">STEP 03</div>
+        <h3>Dual scores go live</h3>
+        <p>Content Score and GEO Score update on every debounce tick. Equal weight, equal peers, never buried.</p>
+        <div class="visual">
+          <span style="color: var(--score-good);">Content  82</span>
+          <span style="color: var(--score-good);">GEO      76</span>
+          <span>lift: +9 / +4 available</span>
+        </div>
+      </div>
+      <div class="hiw-step">
+        <div class="step-n">STEP 04</div>
+        <h3>Ship with evidence</h3>
+        <p>Every score has its breakdown. Every action traces to the same canonical output. No JSON dumps, no guesses.</p>
+        <div class="visual">
+          <span>signals: 14</span>
+          <span>weights: locked</span>
+          <span style="color: var(--accent);">PUBLISH →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE NARRATIVE -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">04 / THE SYSTEM</span>
+        <span class="eyebrow eyebrow-accent">ONE MODEL, FOUR SURFACES</span>
+      </div>
+      <div>
+        <h2>Built as one scoring brain. Exposed as four editorial surfaces.</h2>
+        <p class="lede">
+          Not a feature grid. A system. Each surface reads from the same canonical model, which is
+          why a 3-point lift in Top Actions always matches a 3-point move in the breakdown.
+        </p>
+      </div>
+    </div>
+
+    <div class="feat-grid">
+      <div class="feat a">
+        <div class="tag">SURFACE · 01</div>
+        <h3>Dual-Score Lockup</h3>
+        <p style="max-width: 420px;">
+          Content and GEO as equal peers. One visual system. One color ramp.
+          A writer learns the entire product from this one object.
+        </p>
+        <div class="feat-visual-score">
+          <div class="mini-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#1F1F1F" stroke-width="6" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--score-good)" stroke-width="6" stroke-dasharray="263.89" stroke-dashoffset="55" stroke-linecap="round" />
+            </svg>
+            <div class="num"><div class="n">82</div><div class="lbl">CONTENT</div></div>
+          </div>
+          <div class="mini-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#1F1F1F" stroke-width="6" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--score-good)" stroke-width="6" stroke-dasharray="263.89" stroke-dashoffset="79" stroke-linecap="round" />
+            </svg>
+            <div class="num"><div class="n">70</div><div class="lbl">GEO</div></div>
+          </div>
+          <div style="flex: 1; border-left: 1px solid var(--line); padding-left: 20px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3);">
+            <div style="color: var(--text-2); font-family: 'Geist', sans-serif; font-size: 13px; line-height: 1.5; margin-bottom: 10px;">
+              Status:<br/><span style="color: var(--score-good); font-weight: 600;">Good · shippable</span>
+            </div>
+            <div>Δ last save +3 / +1</div>
+            <div>updated 0:02 ago</div>
+          </div>
+        </div>
+        <div style="margin-top: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3); padding-top: 16px; border-top: 1px dashed var(--line-2);">
+          answers: <span style="color: var(--text-2);">how am I doing?</span>
+        </div>
+      </div>
+
+      <div class="feat b">
+        <div class="tag">SURFACE · 02</div>
+        <h3>Top 3 Actions</h3>
+        <p>Prioritized by expected lift. Contextual format. Click to see the delta.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+          <div style="padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #0c0c0c;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">Add H2: "Best practices"</div>
+            <div class="mono" style="font-size: 11px; color: var(--score-good);">+5 pts</div>
+          </div>
+          <div style="padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #0c0c0c;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">Add 2 cited statistics</div>
+            <div class="mono" style="font-size: 11px; color: var(--accent);">+6 GEO</div>
+          </div>
+          <div style="padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #0c0c0c;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">Improve Flesch-Kincaid → G8</div>
+            <div class="mono" style="font-size: 11px;"><span style="color: var(--score-good);">+3 Content</span> <span style="color: var(--text-3);">/</span> <span style="color: var(--accent);">+1 GEO</span></div>
+          </div>
+        </div>
+        <div style="margin-top: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3); padding-top: 16px; border-top: 1px dashed var(--line-2);">
+          answers: <span style="color: var(--text-2);">what next?</span>
+        </div>
+      </div>
+
+      <div class="feat c">
+        <div class="tag">SURFACE · 03</div>
+        <h3>Terms, by tier</h3>
+        <p>Required, recommended, optional. Live checkmarks. One score ramp.</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+          <div class="mono" style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: var(--text-2);">content optimization</span><span style="color: var(--score-excellent);">✓ REQ</span></div>
+          <div class="mono" style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: var(--text-2);">search intent</span><span style="color: var(--score-poor);">× REQ</span></div>
+          <div class="mono" style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: var(--text-2);">entity graph</span><span style="color: var(--score-fair);">~ REC</span></div>
+          <div class="mono" style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: var(--text-2);">citation density</span><span style="color: var(--score-excellent);">✓ REC</span></div>
+        </div>
+      </div>
+
+      <div class="feat d">
+        <div class="tag">SURFACE · 04</div>
+        <h3>SERP Analyzer</h3>
+        <p>Live top-10 for your keyword, scored against your draft.</p>
+        <div class="serp-mock" style="margin-top: 6px;">
+          <div class="serp-row highlight"><span class="rank">YOU</span><span class="url">seoairegent.com/draft</span><span class="sc">82</span></div>
+          <div class="serp-row"><span class="rank">01</span><span class="url">ahrefs.com/blog/content…</span><span class="sc">89</span></div>
+          <div class="serp-row"><span class="rank">02</span><span class="url">moz.com/learn/seo…</span><span class="sc">86</span></div>
+        </div>
+      </div>
+
+      <div class="feat e">
+        <div class="tag">SURFACE · 05</div>
+        <h3>AI Writer</h3>
+        <p>Drafts inside the canonical loop. Every sentence scored.</p>
+        <div class="aiw-lines" style="margin-top: 10px;">
+          <div class="l mid"></div>
+          <div class="l short"></div>
+          <div class="l"></div>
+          <div class="l typing"></div>
+        </div>
+        <div class="mono" style="margin-top: auto; font-size: 11px; color: var(--text-3); padding-top: 16px; border-top: 1px dashed var(--line-2);">
+          generating · <span style="color: var(--accent);">GEO +4</span>
+        </div>
+      </div>
+
+      <div class="feat" style="grid-column: span 6; padding: 40px 48px; min-height: 160px; flex-direction: row; gap: 48px; align-items: center;">
+        <div class="tag" style="white-space: nowrap;">PHILOSOPHY</div>
+        <h3 style="font-size: 32px; line-height: 1.15; max-width: 820px; margin: 0;">
+          One <em style="color: var(--accent); font-style: normal;">explainScore()</em> function. No drift between the ring you see, the lift you chase, and the breakdown you audit.
+        </h3>
+        <div style="margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3); text-align: right; white-space: nowrap;">
+          <div>CANONICAL</div>
+          <div style="color: var(--score-excellent);">● SINGLE SOURCE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="section" id="compare">
+  <div class="container">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">05 / COMPARE</span>
+        <span class="eyebrow eyebrow-accent">THE ROW THAT MATTERS</span>
+      </div>
+      <div>
+        <h2>The only content platform scoring AI search as a peer, not a footnote.</h2>
+        <p class="lede">
+          Everyone does Content Score. One row below, the category changes. GEO Score is a native,
+          equal-weight metric at SEO AI Regent — not a beta, not a bolt-on, not a label on the same model.
+        </p>
+      </div>
+    </div>
+
+    <div class="cmp">
+      <div class="cmp-head">
+        <div>FEATURE</div>
+        <div class="brand-rf">SEO AI Regent</div>
+        <div class="brand-col">Surfer</div>
+        <div class="brand-col">Clearscope</div>
+        <div class="brand-col">Frase</div>
+      </div>
+
+      <div class="cmp-row">
+        <div>
+          <span class="feat-name">Content Score</span>
+          <span class="feat-desc">TRADITIONAL SEARCH RANKING SIGNAL</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+      </div>
+
+      <div class="cmp-row anchor">
+        <div>
+          <span class="feat-name">GEO Score</span>
+          <span class="feat-desc" style="color: var(--accent);">AI-MEDIATED RETRIEVAL · NATIVE PEER METRIC</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+      </div>
+
+      <div class="cmp-row">
+        <div>
+          <span class="feat-name">SERP Analyzer</span>
+          <span class="feat-desc">LIVE TOP-10 CORPUS SCORING</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+      </div>
+
+      <div class="cmp-row">
+        <div>
+          <span class="feat-name">AI Writer</span>
+          <span class="feat-desc">DRAFTING INSIDE THE CANONICAL LOOP</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v limited"><span class="dash">−</span>Limited</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+      </div>
+
+      <div class="cmp-row">
+        <div>
+          <span class="feat-name">Canonical Signal Breakdown</span>
+          <span class="feat-desc">EVERY SCORE HAS ITS "WHY"</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v limited"><span class="dash">−</span>Partial</div>
+        <div class="v yes"><span class="check">✓</span>Yes</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+      </div>
+
+      <div class="cmp-row">
+        <div>
+          <span class="feat-name">Focus-first Editor</span>
+          <span class="feat-desc">CLEAN CANVAS · ASSISTED MODE OPT-IN</span>
+        </div>
+        <div class="v rf"><span class="check">✓</span>Yes</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+        <div class="v no"><span class="x-mark">×</span>No</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-3); letter-spacing: 0.06em;">
+      LAST VERIFIED 2026-04-14 · PUBLIC PRODUCT PAGES · CATEGORY: CONTENT SCORING
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">06 / EVIDENCE</span>
+        <span class="eyebrow eyebrow-accent">FROM THE DESK OF</span>
+      </div>
+      <div>
+        <h2>What editorial teams say when they stop guessing what AI search rewards.</h2>
+      </div>
+    </div>
+
+    <div class="testimonials">
+      <div class="quote">
+        <div class="body">We used to score for Google and argue about AI. SEO AI Regent put both on the same rail and the arguments stopped the same afternoon.</div>
+        <div class="attr">
+          <div class="avatar">MK</div>
+          <div>
+            <div class="name">Maya Kovac</div>
+            <div class="role">HEAD OF CONTENT · ATLAS &amp; ORE</div>
+          </div>
+        </div>
+      </div>
+      <div class="quote">
+        <div class="body">The dual-score lockup changed how our writers prioritize citations. GEO isn't a future problem anymore — it's a Tuesday task.</div>
+        <div class="attr">
+          <div class="avatar">DR</div>
+          <div>
+            <div class="name">Devon Reyes</div>
+            <div class="role">DIRECTOR OF SEO · NORTHWIND</div>
+          </div>
+        </div>
+      </div>
+      <div class="quote">
+        <div class="body">Every other tool gives you a score and asks you to trust it. SEO AI Regent shows the weights, the contribution, the lift. That's the product.</div>
+        <div class="attr">
+          <div class="avatar">SL</div>
+          <div>
+            <div class="name">Saga Lindqvist</div>
+            <div class="role">EDITOR-IN-CHIEF · KERNEL/CO</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">07 / PRICING</span>
+        <span class="eyebrow eyebrow-accent">BY DOCUMENT VOLUME</span>
+      </div>
+      <div>
+        <h2>Priced by canonical scoring runs, not seats.</h2>
+        <p class="lede">Every plan includes both Content Score and GEO Score. GEO is never an upsell.</p>
+      </div>
+    </div>
+
+    <div class="pricing">
+      <div class="plan">
+        <div class="name">Editor</div>
+        <div class="price"><span class="currency">$</span>49<span class="unit">/ month</span></div>
+        <p class="blurb">For the independent operator who ships one strong piece a week.</p>
+        <ul>
+          <li><span class="check">✓</span><strong>40</strong>&nbsp;scored documents / mo</li>
+          <li><span class="check">✓</span>Content + GEO, equal</li>
+          <li><span class="check">✓</span>SERP Analyzer (top 20)</li>
+          <li><span class="check">✓</span>Focus-first editor</li>
+          <li><span class="check">✓</span>Signal breakdown</li>
+        </ul>
+        <a class="btn btn-secondary" href="#" style="margin-top: auto;">Start free →</a>
+      </div>
+
+      <div class="plan featured">
+        <div class="name featured">Editorial</div>
+        <div class="price"><span class="currency">$</span>149<span class="unit">/ month</span></div>
+        <p class="blurb">For teams running a publication with real standards for both rankings and AI retrieval.</p>
+        <ul>
+          <li><span class="check">✓</span><strong>200</strong>&nbsp;scored documents / mo</li>
+          <li><span class="check">✓</span>Everything in Editor</li>
+          <li><span class="check">✓</span>AI Writer inside the loop</li>
+          <li><span class="check">✓</span>Multi-market SERP sets</li>
+          <li><span class="check">✓</span>Team workspaces (up to 10)</li>
+          <li><span class="check">✓</span>API access — canonical output</li>
+        </ul>
+        <a class="btn btn-primary" href="#" style="margin-top: auto;">Start free →</a>
+      </div>
+
+      <div class="plan">
+        <div class="name">Syndicate</div>
+        <div class="price">Custom</div>
+        <p class="blurb">For publishers, agencies and newsrooms running programmatic scoring at scale.</p>
+        <ul>
+          <li><span class="check">✓</span>Unlimited scoring runs</li>
+          <li><span class="check">✓</span>Custom weight packs</li>
+          <li><span class="check">✓</span>SSO, audit log, SLA</li>
+          <li><span class="check">✓</span>Dedicated GEO analyst</li>
+          <li><span class="check">✓</span>On-prem / VPC available</li>
+        </ul>
+        <a class="btn btn-secondary" href="#" style="margin-top: auto;">Contact sales →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section">
+  <div class="container-tight">
+    <div class="section-head">
+      <div class="meta">
+        <span class="num">08 / FAQ</span>
+        <span class="eyebrow eyebrow-accent">WHAT PEOPLE ASK FIRST</span>
+      </div>
+      <div>
+        <h2>Every answer points back to one canonical model.</h2>
+      </div>
+    </div>
+
+    <div class="faq" id="faq">
+      <!-- filled by JS for simplicity -->
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="grid-bg"></div>
+  <div class="container">
+    <div style="max-width: 1100px;">
+      <div class="eyebrow" style="margin-bottom: 32px;">
+        <span style="color: var(--accent);">09 /</span> &nbsp; START
+      </div>
+      <h2>
+        Score it before<br/>
+        you ship it. <em>Both</em><br/>
+        kinds of search.
+      </h2>
+      <p class="sub">Seven days. No card. Bring a keyword — we'll handle the rest of the evidence.</p>
+      <div class="ctas">
+        <form class="hero-split" style="margin: 0;" onsubmit="event.preventDefault();">
+          <div class="hero-keyword" style="max-width: 440px;">
+            <span class="prefix mono">kw //</span>
+            <input placeholder="your first keyword" />
+            <button type="submit">Start free &rarr;</button>
+          </div>
+          <a class="btn btn-secondary" href="#">Try live demo</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="top">
+      <div class="brand">
+        <div class="bn"><span class="logo-mark" style="width: 20px; height: 20px;"></span>SEO AI Regent</div>
+        <p>Editorial-grade content scoring for Google and AI search. Built in NYC. Shipping worldwide.</p>
+        <div class="pill-live" style="align-self: flex-start;"><span class="ping"></span>ALL SYSTEMS NOMINAL</div>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Content Score</a></li>
+          <li><a href="#">GEO Score</a></li>
+          <li><a href="#">SERP Analyzer</a></li>
+          <li><a href="#">AI Writer</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">Docs</a></li>
+          <li><a href="#">GEO Index</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Status</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Security</a></li>
+          <li><a href="#">DPA</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 SEO AI REGENT, INC · CONTENT SCORING FOR GOOGLE AND AI SEARCH</span>
+      <span>V4.2.1 · BUILD 2026.04.17</span>
+    </div>
+  </div>
+</footer>
+
+<!-- TWEAKS PANEL -->
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="row">
+    <label>Accent <span class="val" id="accentVal">#06B6D4</span></label>
+    <div class="swatches" id="swatches">
+      <div class="swatch active" data-color="#06B6D4" style="background: #06B6D4"></div>
+      <div class="swatch" data-color="#A3E635" style="background: #A3E635"></div>
+      <div class="swatch" data-color="#F97316" style="background: #F97316"></div>
+      <div class="swatch" data-color="#EC4899" style="background: #EC4899"></div>
+      <div class="swatch" data-color="#FAFAFA" style="background: #FAFAFA"></div>
+    </div>
+  </div>
+  <div class="row">
+    <label>Globe speed <span class="val" id="speedVal">1.0×</span></label>
+    <input type="range" min="0.25" max="3" step="0.25" value="1" id="speedRange" />
+  </div>
+  <div class="row">
+    <label>Zoom intensity <span class="val" id="zoomVal">1.0×</span></label>
+    <input type="range" min="0.3" max="2" step="0.1" value="1" id="zoomRange" />
+  </div>
+  <div class="row">
+    <label class="chk"><input type="checkbox" id="gridToggle" checked /> Wireframe grid</label>
+    <label class="chk"><input type="checkbox" id="pingsToggle" checked /> City pings</label>
+  </div>
+</div>
+
+<!-- Tweak defaults block -->
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#06B6D4",
+  "globeSpeed": 1.0,
+  "zoomIntensity": 1.0,
+  "wireframeGrid": true,
+  "cityPings": true
+}/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="globe-standalone.js"></script>
+<script src="ui.js"></script>
+
+<template id="__bundler_thumbnail" data-bg-color="#0A0A0A">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0A0A0A"/>
+    <g transform="translate(600 400)">
+      <circle r="220" fill="none" stroke="#1F4D5A" stroke-width="1.5" opacity="0.55"/>
+      <ellipse rx="220" ry="70" fill="none" stroke="#1F4D5A" stroke-width="1" opacity="0.4"/>
+      <ellipse rx="220" ry="140" fill="none" stroke="#1F4D5A" stroke-width="1" opacity="0.4"/>
+      <ellipse rx="70" ry="220" fill="none" stroke="#1F4D5A" stroke-width="1" opacity="0.4"/>
+      <ellipse rx="140" ry="220" fill="none" stroke="#1F4D5A" stroke-width="1" opacity="0.4"/>
+      <circle r="6" fill="#06B6D4"/>
+      <circle r="18" fill="none" stroke="#06B6D4" stroke-width="1.5" opacity="0.7"/>
+      <circle cx="-120" cy="-90" r="4" fill="#06B6D4"/>
+      <circle cx="110" cy="-60" r="4" fill="#06B6D4"/>
+      <circle cx="60" cy="130" r="4" fill="#06B6D4"/>
+      <circle cx="-160" cy="40" r="4" fill="#06B6D4"/>
+    </g>
+    <text x="600" y="720" text-anchor="middle" fill="#F5F5F5" font-family="system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="-0.5">SEO AI Regent</text>
+  </svg>
+</template>
+
+</body>
+</html>

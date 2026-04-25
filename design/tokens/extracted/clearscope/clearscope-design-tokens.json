@@ -1,0 +1,191 @@
+{
+  "color": {
+    "primary": {
+      "$value": "#580101",
+      "$type": "color"
+    },
+    "secondary": {
+      "$value": "#e0e9f2",
+      "$type": "color"
+    },
+    "accent": {
+      "$value": "#ffc2c2",
+      "$type": "color"
+    },
+    "neutral-0": {
+      "$value": "#000000",
+      "$type": "color"
+    },
+    "neutral-1": {
+      "$value": "#f4f4f2",
+      "$type": "color"
+    },
+    "neutral-2": {
+      "$value": "#ffffff",
+      "$type": "color"
+    },
+    "neutral-3": {
+      "$value": "#c1c1c1",
+      "$type": "color"
+    },
+    "background-0": {
+      "$value": "#f4f4f2",
+      "$type": "color"
+    },
+    "background-1": {
+      "$value": "#010101",
+      "$type": "color"
+    },
+    "text-0": {
+      "$value": "#000000",
+      "$type": "color"
+    },
+    "text-1": {
+      "$value": "#010101",
+      "$type": "color"
+    },
+    "text-2": {
+      "$value": "#f4f4f2",
+      "$type": "color"
+    },
+    "text-3": {
+      "$value": "#580101",
+      "$type": "color"
+    },
+    "text-4": {
+      "$value": "#e0e9f2",
+      "$type": "color"
+    }
+  },
+  "fontFamily": {
+    "gt-pressura-mono": {
+      "$value": "GT-Pressura-Mono",
+      "$type": "fontFamily"
+    },
+    "body": {
+      "$value": "ui-sans-serif",
+      "$type": "fontFamily"
+    }
+  },
+  "fontSize": {
+    "12": {
+      "$value": "12px",
+      "$type": "dimension"
+    },
+    "14": {
+      "$value": "14px",
+      "$type": "dimension"
+    },
+    "16": {
+      "$value": "16px",
+      "$type": "dimension"
+    },
+    "18": {
+      "$value": "18px",
+      "$type": "dimension"
+    },
+    "74.2362": {
+      "$value": "74.2362px",
+      "$type": "dimension"
+    },
+    "43.3472": {
+      "$value": "43.3472px",
+      "$type": "dimension"
+    },
+    "36.2448": {
+      "$value": "36.2448px",
+      "$type": "dimension"
+    },
+    "30.312": {
+      "$value": "30.312px",
+      "$type": "dimension"
+    },
+    "21.217": {
+      "$value": "21.217px",
+      "$type": "dimension"
+    },
+    "17.7565": {
+      "$value": "17.7565px",
+      "$type": "dimension"
+    },
+    "14.865": {
+      "$value": "14.865px",
+      "$type": "dimension"
+    },
+    "12.447": {
+      "$value": "12.447px",
+      "$type": "dimension"
+    }
+  },
+  "spacing": {
+    "11": {
+      "$value": "22px",
+      "$type": "dimension"
+    },
+    "16": {
+      "$value": "32px",
+      "$type": "dimension"
+    },
+    "19": {
+      "$value": "38px",
+      "$type": "dimension"
+    },
+    "27": {
+      "$value": "54px",
+      "$type": "dimension"
+    },
+    "39": {
+      "$value": "78px",
+      "$type": "dimension"
+    },
+    "53": {
+      "$value": "106px",
+      "$type": "dimension"
+    },
+    "58": {
+      "$value": "116px",
+      "$type": "dimension"
+    },
+    "78": {
+      "$value": "156px",
+      "$type": "dimension"
+    },
+    "1px": {
+      "$value": "1px",
+      "$type": "dimension"
+    },
+    "15px": {
+      "$value": "15px",
+      "$type": "dimension"
+    },
+    "63px": {
+      "$value": "63px",
+      "$type": "dimension"
+    },
+    "119px": {
+      "$value": "119px",
+      "$type": "dimension"
+    }
+  },
+  "borderRadius": {
+    "xs": {
+      "$value": "2px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "6px",
+      "$type": "dimension"
+    }
+  },
+  "shadow": {
+    "sm": {
+      "$value": "rgb(128, 128, 128) 0px 0px 5px 0px",
+      "$type": "shadow"
+    },
+    "xs": {
+      "$value": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+      "$type": "shadow"
+    }
+  },
+  "breakpoint": {}
+}

@@ -1,0 +1,476 @@
+# AUGMENT CODE AUDIT PROMPT — SEO-AI-REGENT — GODMYTHOS v9
+
+> **Mode**: GODMYTHOS v9 · AUGMENT_CODE_MODE · ULTRATHINK · Full-System Audit  
+> **Directive**: Audit, repair, harden, and verify the entire SEO-AI-REGENT codebase as if it is going live for real users, real content teams, and real paid subscriptions immediately. This is a full code audit, product audit, scoring audit, deployment audit, and competitive-readiness audit. Do not stop at identifying issues. Fix them in-place whenever possible. If a full fix cannot be completed safely in the current pass, create an exact implementation task with acceptance criteria, verification steps, and file-level scope. No TODO theater. No placeholders. No vague “should improve” commentary.
+
+---
+
+## SYSTEM IDENTITY
+
+SEO-AI-REGENT is an SEO SaaS application competing with Surfer SEO, Clearscope, and Frase. Its core modules are:
+
+1. **SERP Analyzer** — fetch top-ranking results and derive actionable optimization patterns
+2. **Content Editor** — real-time scoring editor with term and structure guidance
+3. **Keyword Research** — clustering, gaps, and opportunity discovery
+4. **AI Writer** — outline and draft generation aligned to SERP patterns
+5. **Audit** — URL-based scoring against live competitors
+6. **GEO Score** — AI-search visibility scoring for ChatGPT / Perplexity / Gemini
+
+The core promise is:
+
+**“Content scoring for Google AND AI search.”**
+
+The audit must verify that the codebase actually delivers this promise, not merely that the UI has screens for it.
+
+---
+
+## GODMYTHOS v9 OPERATING RULES
+
+1. **Truth over theater** — do not mark a feature complete unless it works end-to-end.
+2. **Evidence over approximation** — if a value can be derived, extracted, measured, or tested, do that instead of guessing.
+3. **Fix before praise** — do not celebrate architecture or polish until failure paths, correctness, and trust are verified.
+4. **Score transparency is mandatory** — any scoring system must explain inputs, weights, movement, and recommended actions.
+5. **Competitive credibility matters** — the product must withstand comparison to Surfer, Clearscope, and Frase in both UX and code robustness.
+6. **Design discipline is a product requirement** — visual sloppiness, token drift, and generic SaaS template patterns are audit failures.
+7. **No dead surfaces** — every button, action, panel, and route must be connected to real logic or removed.
+8. **No black-box billing** — Stripe state, entitlements, and plan transitions must be explicit, verified, and reversible.
+9. **No silent failure** — every catch path must log structured context and preserve system integrity.
+10. **Ship-readiness is binary** — unresolved critical paths mean “not ready,” even if most of the app works.
+
+---
+
+## REQUIRED EXECUTION STYLE FOR AUGMENT CODE
+
+When operating inside the repo:
+
+- Read code before changing it.
+- Build a mental map of architecture, data flow, scoring flow, and auth flow.
+- Prefer surgical fixes over cosmetic rewrites.
+- Refactor only when the existing structure is actively unsafe, misleading, or blocking correctness.
+- Every meaningful fix must be followed by verification.
+- Prefer real tests over assumptions.
+- Do not skip generated types, env validation, migrations, webhook handlers, background jobs, or editor extensions.
+- If a route exists, test it.
+- If a UI claims a metric, trace where it comes from.
+- If a score is shown, verify its computation path from input to persisted/output state.
+
+---
+
+## PHASE 0 — REPO RECONSTRUCTION
+
+Before making changes, reconstruct the system.
+
+### 0A. Inventory
+Map:
+- frontend app structure
+- API routes
+- auth system
+- billing system
+- scoring engine
+- SERP ingestion pipeline
+- NLP/entity extraction path
+- GEO score logic
+- DB schema + migrations
+- Redis / cache usage
+- background jobs / queues
+- deployment config
+- observability setup
+
+### 0B. Product-to-Code Trace
+For each major product promise, identify:
+- UI entry point
+- API endpoint(s)
+- business logic file(s)
+- data model(s)
+- cache/dependency touchpoints
+- failure modes
+
+Build this trace for:
+- keyword analysis
+- content scoring
+- GEO scoring
+- URL audits
+- article save/update
+- AI writer
+- subscription gating
+
+### 0C. Competitor Constraint
+Assume the product will be judged against Surfer / Clearscope / Frase on:
+- speed
+- scoring trust
+- editor usefulness
+- onboarding clarity
+- reliability
+- paid-plan credibility
+
+Do not audit in isolation.
+
+---
+
+## PHASE 1 — STATIC CODE AUDIT
+
+Scan the entire codebase for:
+
+- runtime errors
+- dead code
+- broken imports
+- missing modules
+- wrong path aliases
+- unresolved types
+- unhandled promises
+- missing `await`
+- race conditions
+- async state hazards
+- fragile editor state updates
+- invalid React hooks usage
+- hydration mismatch risks
+- server/client boundary mistakes
+- API handlers that do not validate inputs
+- Prisma misuse
+- unbounded caches
+- duplicate logic across modules
+- stale feature flags
+- hidden mock data
+- unsafe fallback defaults
+- swallowed exceptions
+- misleading comments that no longer match behavior
+
+### 1A. Type Integrity
+Fix:
+- `any` where real types are required
+- missing return types on exported functions
+- weak schema typing between API and UI
+- mismatch between Prisma schema and TS domain types
+- JSON blobs with no runtime validation
+
+### 1B. Boundary Validation
+Require validation at:
+- API route input
+- query params
+- body payloads
+- webhook payloads
+- env vars
+- external API responses
+- editor serialization/deserialization
+- AI writer outputs if structured data is expected
+
+Use schema validation. No trust-by-convention.
+
+---
+
+## PHASE 2 — PRODUCT WORKFLOW CORRECTNESS
+
+Audit whether the app’s core workflows work end-to-end.
+
+### 2A. SERP Analyzer
+Verify:
+- keyword submission works
+- external SERP provider is correctly called
+- retries / rate limiting / timeouts are handled
+- response parsing is robust
+- headings/entities/term signals are extracted correctly
+- cache behavior is correct
+- stale or partial SERP data does not silently poison scoring
+
+Fix:
+- invalid parser assumptions
+- stale cache misuse
+- weak normalization
+- useless raw-data output with no synthesis
+- broken loading or progress feedback
+
+### 2B. Content Editor
+Audit the editor as the revenue-critical feature.
+
+Verify:
+- loading an article works
+- autosave works
+- score recalculation is triggered correctly
+- editor changes propagate to the scoring layer
+- term suggestions map to real analysis output
+- content score breakdown reflects actual scoring logic
+- GEO score panel is distinct and coherent
+- long-form content remains stable
+- editor state survives refresh/navigation appropriately
+
+If the editor is only cosmetically integrated with scoring, it fails.
+
+### 2C. Audit Flow
+Verify:
+- URL fetch path works on real URLs
+- HTML/content extraction is robust
+- audit score uses the same scoring model as editor scoring where intended
+- suggested fixes are prioritized
+- error paths are usable
+- audit results persist if the product claims persistence
+- export/share path works if exposed in UI
+
+### 2D. Keyword Research
+Verify:
+- clustering logic actually groups keywords meaningfully
+- duplicate or near-duplicate keywords are handled
+- search intent, difficulty, overlap, and gaps are coherent if shown
+- outputs connect to article creation or audit workflows
+
+### 2E. AI Writer
+Verify:
+- outline generation works
+- draft generation works
+- generated content returns to editor correctly
+- prompt-response parsing is safe
+- retries and rate limits are handled
+- users can edit generated content without breaking the scoring pipeline
+
+### 2F. GEO Score
+Audit aggressively:
+- inputs are real
+- logic is not duplicated sloppily from Content Score
+- sub-dimensions exist and are understandable
+- recommendations map to specific GEO dimensions
+- output is explainable enough to earn trust
+
+If GEO Score feels invented, arbitrary, or disconnected from displayed recommendations, treat as a critical product failure.
+
+---
+
+## PHASE 3 — SCORING ENGINE AUDIT
+
+This phase is non-negotiable. The scoring system is the trust core.
+
+### 3A. Content Score Verification
+Trace:
+- input
+- normalization
+- signal calculation
+- weighting
+- aggregation
+- persistence
+- rendering
+
+Confirm alignment with the intended weighted multi-signal model:
+- termFrequency
+- entityCoverage
+- headingStructure
+- wordCount
+- readability
+- internalLinks
+- geoSignals contribution
+
+### 3B. GEO Score Verification
+Trace:
+- entityAuthority
+- factualDensity
+- answerFormat
+- sourceCredibility
+- freshness
+
+Confirm:
+- weights are implemented
+- no hidden defaults flatten weak data into fake confidence
+- errors do not silently degrade to misleading “valid” scores
+
+### 3C. Explainability Requirement
+Every score surface must support:
+- what changed
+- why it changed
+- which signal moved
+- what the user should do next
+- ideally estimated impact of the recommended fix
+
+If the code calculates score but the UI cannot explain it, the feature is incomplete.
+
+### 3D. Adversarial Scenarios
+Test:
+- keyword-stuffed garbage content
+- excellent structure but missing entities
+- extremely long content
+- very short content
+- malformed HTML
+- sparse SERP
+- duplicate headings
+- missing title
+- external API partial failure
+- great SEO score but weak GEO score
+- good GEO score but weak traditional SEO structure
+
+The system must behave sensibly.
+
+---
+
+## PHASE 4 — AUTH, SECURITY, AND DATA PROTECTION
+
+Audit and repair:
+
+### 4A. Authentication
+Verify:
+- signup
+- login
+- logout
+- session refresh
+- password reset if present
+- OAuth linking if present
+
+Confirm:
+- secure password hashing
+- session/token expiry discipline
+- no sensitive tokens in URLs or localStorage
+- proper cookie flags if cookies are used
+
+### 4B. Authorization
+Verify:
+- ownership checks on every user resource
+- no client-only permission boundaries
+- protected routes actually protect data
+- article, audit, keyword, and billing data are isolated per user
+
+### 4C. Input Security
+Verify:
+- parameterized DB access only
+- XSS defenses for user content
+- HTML sanitization where needed
+- SSRF risk review for URL-based audit/fetch features
+- webhook verification
+- rate limiting
+- CORS allowlist
+- secure headers
+
+### 4D. Secret Handling
+Verify:
+- env-only secrets
+- no leaked API keys
+- no secrets in logs
+- startup fails fast when required secrets are missing
+
+---
+
+## PHASE 5 — BILLING, ENTITLEMENTS, AND PLAN ENFORCEMENT
+
+Audit Stripe and entitlement logic end-to-end.
+
+### 5A. Stripe Flows
+Verify:
+- customer creation idempotency
+- checkout session correctness
+- webhook signature verification
+- event handling for create/update/cancel/payment failure
+- duplicate webhook safety
+- correct mapping between Stripe state and internal plan state
+
+### 5B. Plan Enforcement
+Verify:
+- free tier limits are real and enforced
+- starter / growth / enterprise capabilities align to UI claims
+- upgrade flows unlock the right features
+- downgrade/cancel flows revoke access correctly without corrupting data
+
+### 5C. Recovery UX
+Verify:
+- failed payment recovery path
+- expired subscription path
+- billing portal path if present
+- no confusing “paid but blocked” states
+
+---
+
+## PHASE 6 — DATABASE, CACHE, AND INFRA CORRECTNESS
+
+### 6A. Database
+Verify:
+- schema integrity
+- FK correctness
+- indexes on hot paths
+- migrations are sequential and safe
+- no dangerous raw SQL
+- transactions around multi-step writes
+- pagination on large queries
+- no N+1 query abuse
+
+### 6B. Cache / Redis
+Verify:
+- TTLs are intentional
+- invalidation is sane
+- no stale SERP data persists indefinitely
+- score cache does not return mismatched content/user state
+- concurrent updates do not corrupt cached outputs
+
+### 6C. Background Jobs
+If present, verify:
+- retries
+- idempotency
+- logging
+- visibility into failure
+- safe shutdown behavior
+
+---
+
+## PHASE 7 — DESIGN & UX CODE AUDIT
+
+GODMYTHOS v8 introduced design extraction, scoring, and anti-pattern enforcement. Carry those standards forward here.
+
+### 7A. Token Discipline
+Verify:
+- no random hardcoded colors when system tokens exist
+- spacing rhythm is consistent
+- typography is coherent
+- Geist is used consistently if it remains the brand font
+- dark mode is intentional, not broken-by-default
+
+### 7B. Anti-Patterns
+Flag as failures:
+- generic SaaS starter-template sections
+- decorative gradients compensating for weak hierarchy
+- dead controls
+- inconsistent score colors
+- fake loading states disconnected from real async work
+- panels that display metrics without source traceability
+
+### 7C. Design Verification
+If the environment supports it, require:
+- designlang extraction against competitors
+- designlang score for app quality
+- clone/compare pass against category leaders
+- explicit note if visual quality drops below target grade
+
+---
+
+## PHASE 8 — TEST GENERATION & VERIFICATION
+
+Create or repair a runnable suite covering:
+
+- unit tests for scoring logic
+- integration tests for API routes
+- auth tests
+- Stripe tests
+- DB constraint tests
+- editor/scoring integration tests
+- audit pipeline tests
+- keyword workflow tests
+- AI writer tests
+- E2E flows:
+  - signup → first keyword analysis
+  - create article → live score movement
+  - run URL audit
+  - hit free limit → upgrade
+  - cancel subscription → entitlement change
+
+Also test:
+- bad env vars
+- invalid webhook signature
+- upstream API timeout
+- malformed SERP payload
+- stale cache
+- duplicate requests
+- concurrent saves
+- graceful shutdown
+
+Do not leave tests as empty shells.
+
+---
+
+## PHASE 9 — BUILD, DEPLOY, AND OPERATIONS
+
+Verify:
+- production build completes cleanly
+- env validation runs at startup
+- app binds correctly to `$PORT`
+- Railway deploy assumptions 

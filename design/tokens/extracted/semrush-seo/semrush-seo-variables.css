@@ -1,0 +1,79 @@
+:root {
+  /* Colors — Primary */
+  --color-primary: #181e15;
+  --color-secondary: #006dca;
+  --color-accent: #e0e1e9;
+
+  /* Colors — Neutrals */
+  --color-neutral-50: #000000;
+  --color-neutral-100: #333333;
+  --color-neutral-200: #ffffff;
+  --color-neutral-300: #3e424b;
+  --color-neutral-400: #898d9a;
+  --color-neutral-500: #6c6e79;
+  --color-neutral-600: #575c66;
+
+  /* Colors — Backgrounds */
+  --color-bg: #ffffff;
+  --color-bg-1: #421983;
+  --color-bg-2: #dceeeb;
+
+  /* Colors — Text */
+  --color-text: #000000;
+  --color-text-1: #333333;
+  --color-text-2: #006dca;
+  --color-text-3: #0071bc;
+  --color-text-4: #181e15;
+
+  /* Typography — Families */
+  --font-sans: 'Lazzer', sans-serif;
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Times New Roman', sans-serif;
+  --font-heading: 'Factor A', sans-serif;
+  --font-body: 'Arial', sans-serif;
+
+  /* Typography — Scale */
+  --font-size-100: 100px;
+  --font-size-48: 48px;
+  --font-size-40: 40px;
+  --font-size-32: 32px;
+  --font-size-24: 24px;
+  --font-size-22: 22px;
+  --font-size-16: 16px;
+  --font-size-14: 14px;
+  --font-size-13.3333: 13.3333px;
+  --font-size-12: 12px;
+
+  /* Spacing */
+  --spacing-1: 1px;
+  --spacing-4: 4px;
+  --spacing-16: 16px;
+  --spacing-30: 30px;
+  --spacing-37: 37px;
+  --spacing-44: 44px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-68: 68px;
+  --spacing-80: 80px;
+  --spacing-117: 117px;
+  --spacing-187: 187px;
+  --spacing-418: 418px;
+
+  /* Border Radius */
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-full: 100px;
+
+  /* Original Site Variables */
+  /* — other — */
+  --srf-factor-a-frac: 'frac' off;
+  --srf-factor-a-funk-up-latin: 'ss01' off;
+  --srf-factor-a-curly-arrows: 'ss03' off;
+  --srf-header-blend-percent: 0%;
+  /* — semantic — */
+  success: [object Object];
+  warning: [object Object];
+  error: [object Object];
+  info: [object Object];
+
+}

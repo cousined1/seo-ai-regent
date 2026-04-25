@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://www.frase.io/pricing */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --primary: 214 32% 91%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 223 84% 5%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 148 60% 39%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 24 5% 64%;
+    --muted-foreground: 30 6% 25%;
+    --border: 33 5% 32%;
+    --radius: 8px;
+  }
+}

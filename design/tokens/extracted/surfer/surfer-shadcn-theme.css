@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://surferseo.com */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 0%;
+    --primary: 6 100% 64%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 259 96% 61%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 6 100% 64%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 80%;
+    --muted-foreground: 0 0% 100%;
+    --border: 240 5% 19%;
+    --radius: 8px;
+  }
+}

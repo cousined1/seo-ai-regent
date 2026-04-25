@@ -1,0 +1,41 @@
+{
+  "name": "seo-ai-regent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "start:prod": "prisma migrate deploy && next start",
+    "db:generate": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "test": "vitest run --environment jsdom --pool threads",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@tiptap/react": "^3.22.4",
+    "@tiptap/starter-kit": "^3.22.4",
+    "bcryptjs": "^3.0.3",
+    "next": "^15.5.15",
+    "prisma": "^6.19.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "stripe": "^22.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "22.10.2",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "10.4.19",
+    "jsdom": "24.1.0",
+    "postcss": "8.4.38",
+    "tailwindcss": "3.4.4",
+    "typescript": "5.5.4",
+    "vitest": "^2.1.9"
+  }
+}

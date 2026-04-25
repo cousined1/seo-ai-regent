@@ -1,0 +1,264 @@
+:root {
+  /* Colors — Primary */
+  --color-primary: #580101;
+  --color-secondary: #e0e9f2;
+  --color-accent: #ffc2c2;
+
+  /* Colors — Neutrals */
+  --color-neutral-50: #000000;
+  --color-neutral-100: #f4f4f2;
+  --color-neutral-200: #ffffff;
+  --color-neutral-300: #c1c1c1;
+
+  /* Colors — Backgrounds */
+  --color-bg: #f4f4f2;
+  --color-bg-1: #010101;
+
+  /* Colors — Text */
+  --color-text: #000000;
+  --color-text-1: #010101;
+  --color-text-2: #f4f4f2;
+  --color-text-3: #580101;
+  --color-text-4: #e0e9f2;
+
+  /* Typography — Families */
+  --font-sans: 'GT-Pressura-Mono', sans-serif;
+  --font-body: 'ui-sans-serif', sans-serif;
+
+  /* Typography — Scale */
+  --font-size-74.2362: 74.2362px;
+  --font-size-43.3472: 43.3472px;
+  --font-size-36.2448: 36.2448px;
+  --font-size-30.312: 30.312px;
+  --font-size-21.217: 21.217px;
+  --font-size-18: 18px;
+  --font-size-17.7565: 17.7565px;
+  --font-size-16: 16px;
+  --font-size-14.865: 14.865px;
+  --font-size-14: 14px;
+  --font-size-12.447: 12.447px;
+  --font-size-12: 12px;
+
+  /* Spacing */
+  --spacing-1: 1px;
+  --spacing-15: 15px;
+  --spacing-22: 22px;
+  --spacing-32: 32px;
+  --spacing-38: 38px;
+  --spacing-54: 54px;
+  --spacing-63: 63px;
+  --spacing-78: 78px;
+  --spacing-106: 106px;
+  --spacing-116: 116px;
+  --spacing-119: 119px;
+  --spacing-156: 156px;
+
+  /* Border Radius */
+  --radius-xs: 2px;
+  --radius-md: 6px;
+
+  /* Box Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px;
+  --shadow-sm: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+  --shadow-xs: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  --shadow-sm: rgb(128, 128, 128) 0px 0px 5px 0px;
+
+  /* Original Site Variables */
+  /* — colors — */
+  --highchart-color-orange: #fd7e14;
+  --tw-ring-shadow: 0 0 #0000;
+  --color-outline: oklch(86.9% .022 252.894);
+  --color-highlight: #fff2cc;
+  --color-outline-variant: #e8edf3;
+  --color-success-container: oklch(96.2% .044 156.743);
+  --color-inverse-primary: #b3ccff;
+  --color-stone-400: oklch(70.9% .01 56.259);
+  --tw-inset-ring-shadow: 0 0 #0000;
+  --color-on-surface-variant: oklch(44.6% .043 257.281);
+  --percentage-color-76-90: #4ead1f;
+  --semantic-group-color-7: #a65628;
+  --color-checkbox-switch: oklch(86.9% .022 252.894);
+  --color-surface-container: #ebf0f5;
+  --highchart-color-purple: #a855f7;
+  --color-surface-container-high: #e6eaef;
+  --color-stone-950: oklch(14.7% .004 49.25);
+  --tw-ring-offset-color: #fff;
+  --semantic-group-color-3: #4daf4a;
+  --color-primary-container: #dee8fc;
+  --color-white: #fff;
+  --percentage-color-91-99: #1da51d;
+  --highchart-color-pink: #ec4899;
+  --color-primary-hover: #3f76e4;
+  --color-warning-container: oklch(96.2% .059 95.617);
+  --color-surface-container-highest: #e2e5e9;
+  --tw-ring-offset-width: 0px;
+  --color-on-danger: #fff;
+  --semantic-group-color-5: #ff7f00;
+  --percentage-color-0-15: #d92626;
+  --color-inverse-surface: oklch(31% .044 257.287);
+  --color-danger: oklch(50.5% .213 27.518);
+  --color-on-primary: #fff;
+  --percentage-color-46-60: #bfbf22;
+  --color-inverse-on-surface-variant: oklch(70.4% .04 256.788);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --highchart-color-gray: oklch(55.4% .046 257.417);
+  --color-on-success: #fff;
+  --semantic-group-color-6: #ff3;
+  --color-on-danger-container: oklch(44.4% .177 26.899);
+  --color-surface-container-low: #f4f7fa;
+  --color-stone-100: oklch(97% .001 106.424);
+  --color-on-warning-container: oklch(47.3% .137 46.201);
+  --percentage-color-61-75: #84b620;
+  --color-on-content-grade: #fff;
+  --color-stone-500: oklch(55.3% .013 58.071);
+  --color-inverse-on-surface: oklch(96.8% .007 247.896);
+  --highchart-color-blue: #356ad4;
+  --color-scrim: #000;
+  --color-success: oklch(52.7% .154 150.069);
+  --highchart-color-green: #22c55e;
+  --semantic-group-color-1: #e41a1c;
+  --percentage-color-31-45: #c79123;
+  --color-danger-hover: oklch(57.7% .245 27.325);
+  --semantic-group-color-4: #984ea3;
+  --color-surface: oklch(98.4% .003 247.858);
+  --color-on-primary-container: #2952a3;
+  --color-on-surface: oklch(12.9% .042 264.695);
+  --tw-border-style: solid;
+  --percentage-color-16-30: #d05e25;
+  --color-danger-container: oklch(93.6% .032 17.717);
+  --color-stone-150: oklch(95.23% .0029 84.56);
+  --color-on-success-container: oklch(44.8% .119 151.328);
+  --color-primary: #356ad4;
+  --semantic-group-color-2: #377eb8;
+  --semantic-group-color-8: #f781bf;
+  --percentage-color-100: #1da51d;
+  --color-danger-container-hover: oklch(88.5% .062 18.334);
+  --color-stone-800: oklch(26.8% .007 34.298);
+  --color-surface-container-lowest: #fff;
+  --color-inverse-success: oklch(79.2% .209 151.711);
+  --color-stone-300: oklch(86.9% .005 56.366);
+  --color-stone-50: oklch(98.5% .001 106.423);
+  /* — spacing — */
+  --spacing-f-3-4: clamp(1.3125rem, .8604rem + 1.9289vw, 2.5rem);
+  --spacing-f-8-9: clamp(6.5625rem, 5.2538rem + 5.5838vw, 10rem);
+  --form-elements-base-size: calc(1em - .5rem);
+  --spacing-f-6: clamp(3.5rem, 3.3096rem + .8122vw, 4rem);
+  --spacing-f-3: clamp(1.3125rem, 1.2411rem + .3046vw, 1.5rem);
+  --spacing-f-1: clamp(.4375rem, .4137rem + .1015vw, .5rem);
+  --spacing-f-2-3: clamp(.875rem, .6371rem + 1.0152vw, 1.5rem);
+  --spacing-f-2: clamp(.875rem, .8274rem + .203vw, 1rem);
+  --spacing-f-6-7: clamp(3.5rem, 2.9289rem + 2.4365vw, 5rem);
+  --spacing-f-1-2: clamp(.4375rem, .2234rem + .9137vw, 1rem);
+  --spacing-f-9: clamp(8.75rem, 8.2741rem + 2.0305vw, 10rem);
+  --spacing-f-8: clamp(6.5625rem, 6.2056rem + 1.5228vw, 7.5rem);
+  --spacing: .25rem;
+  --spacing-f-4: clamp(2.1875rem, 2.0685rem + .5076vw, 2.5rem);
+  --spacing-f-7: clamp(4.375rem, 4.1371rem + 1.0152vw, 5rem);
+  --spacing-f-4-5: clamp(2.1875rem, 1.6878rem + 2.132vw, 3.5rem);
+  --tw-space-y-reverse: 0;
+  --spacing-f-5: clamp(3.0625rem, 2.8959rem + .7107vw, 3.5rem);
+  --spacing-f-6-8: clamp(3.5rem, 1.9772rem + 6.4975vw, 7.5rem);
+  --spacing-f-7-8: clamp(4.375rem, 3.1853rem + 5.0761vw, 7.5rem);
+  --spacing-f-5-6: clamp(3.0625rem, 2.7056rem + 1.5228vw, 4rem);
+  /* — typography — */
+  --text-2xl: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-base--line-height: calc(1.5 / 1);
+  --font-mono: "GT-Pressura-Mono", monospace;
+  --tracking-wider: .05em;
+  --text-f-8xl: clamp(2.7061rem, 1.5264rem + 5.0333vw, 5.8048rem);
+  --text-f-4xl: clamp(1.6894rem, 1.2668rem + 1.803vw, 2.7994rem);
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-f-xs: clamp(.7407rem, .7253rem + .0658vw, .7813rem);
+  --text-f-3xl: clamp(1.5017rem, 1.1853rem + 1.35vw, 2.3328rem);
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-weight-bold: 700;
+  --default-font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --text-xs--line-height: calc(1 / .75);
+  --text-xl: 1.25rem;
+  --text-f-7xl: clamp(2.4054rem, 1.4796rem + 3.9502vw, 4.8373rem);
+  --tracking-tighter: -.05em;
+  --text-f-6xl: clamp(2.1382rem, 1.4175rem + 3.0748vw, 4.0311rem);
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-f-base: clamp(.9375rem, .8661rem + .3046vw, 1.125rem);
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --font-weight-semibold: 600;
+  --text-sm: .875rem;
+  --text-4xl: 2.25rem;
+  --text-3xl--line-height: calc(2.25 / 1.875);
+  --text-sm--line-height: calc(1.25 / .875);
+  --text-3xl: 1.875rem;
+  --text-xs: .75rem;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-serif: "century-old-style-std", serif;
+  --text-f-sm: clamp(.8333rem, .7937rem + .1692vw, .9375rem);
+  --leading-marketing-heading: 1.2;
+  --text-f-lg: clamp(1.0547rem, .9423rem + .4797vw, 1.35rem);
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-f-5xl: clamp(1.9006rem, 1.3453rem + 2.3694vw, 3.3592rem);
+  --text-base: 1rem;
+  --text-f-2xl: clamp(1.3348rem, 1.1029rem + .9895vw, 1.944rem);
+  --default-mono-font-family: "GT-Pressura-Mono", monospace;
+  --text-f-xl: clamp(1.1865rem, 1.0215rem + .7041vw, 1.62rem);
+  /* — shadows — */
+  --tw-inset-shadow-alpha: 100%;
+  --shadow-xs: 0 1px 2px 0 #0000000d;
+  --tw-drop-shadow-alpha: 100%;
+  --shadow-none: 0 0 #0000;
+  --tw-inset-shadow: 0 0 #0000;
+  --tw-shadow-alpha: 100%;
+  --shadow-sm: 0 1px 3px 0 #0000001a, 0 1px 2px -1px #0000001a;
+  --shadow-lg: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+  --tw-shadow: 0 0 #0000;
+  /* — radii — */
+  --radius-sm: .25rem;
+  --radius-md: .375rem;
+  --radius-lg: .5rem;
+  --radius-xs: .125rem;
+  /* — other — */
+  --container-md: 28rem;
+  --topnav-height: 56px;
+  --tw-outline-style: solid;
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --container-stripe-embedded-form-width: calc(412px + 4.5rem);
+  --container-cs-prose: 75ch;
+  --z-modal: 15;
+  --container-sm: 24rem;
+  --z-announcement: 10;
+  --z-nav: 5;
+  --container-lg: 32rem;
+  --z-alert: 30;
+  --default-transition-duration: .15s;
+  --container-xs: 20rem;
+  --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+  --svg-icon-height: 1.15em;
+  --animate-enter-up: enterUp .3s cubic-bezier(0, 0, .2, 1);
+  --z-tooltip: 25;
+  --default-transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+  --container-5xl: 64rem;
+  --tw-translate-z: 0;
+  --container-6xl: 72rem;
+  --container-3xl: 48rem;
+  --tw-translate-y: 0;
+  --container-2xs: 18rem;
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+  --animate-spin: spin 1s linear infinite;
+  --container-4xl: 56rem;
+  --sidenav-width: 220px;
+  --container-marketing: 85rem;
+  --z-dropdown: 20;
+  --container-app: 90rem;
+  --container-2xl: 42rem;
+  --tw-translate-x: 0;
+  --container-3xs: 16rem;
+  --container-xl: 36rem;
+  --container-7xl: 80rem;
+  /* — semantic — */
+  success: [object Object];
+  warning: [object Object];
+  error: [object Object];
+  info: [object Object];
+
+}
