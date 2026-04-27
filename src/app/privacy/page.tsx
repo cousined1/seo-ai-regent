@@ -110,6 +110,19 @@ export default function PrivacyPage() {
             deployment checks but not a staffed support inbox.
           </p>
         </section>
+
+        <section style={sectionStyle}>
+          <h2 style={{ margin: 0, fontSize: "1.5rem" }}>Cookies and Tracking</h2>
+          <p style={{ margin: 0, color: tokens.colors.textSecondary, lineHeight: 1.7 }}>
+            We use strictly necessary cookies to maintain your session and remember your consent
+            preferences. For analytics, preference, and marketing cookies, we ask for your consent first.
+            See our{" "}
+            <Link href="/cookies" style={{ color: tokens.colors.primary }}>
+              Cookie Policy
+            </Link>{" "}
+            for the full list and your rights.
+          </p>
+        </section>
       </div>
     </main>
   );
