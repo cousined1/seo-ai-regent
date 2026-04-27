@@ -974,6 +974,9 @@ export function LandingPage() {
             <Link href="/terms" style={{ color: tokens.colors.primary, fontSize: "14px" }}>
               Terms
             </Link>
+            <Link href="/cookies" style={{ color: tokens.colors.primary, fontSize: "14px" }}>
+              Cookies
+            </Link>
           </div>
         </div>
       </footer>

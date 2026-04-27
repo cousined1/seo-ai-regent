@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { ConsentProvider } from "@/components/consent/consent-provider";
+import { ConsentUI } from "@/components/consent/consent-ui";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://seoairegent.com"),
@@ -46,7 +48,32 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  'analytics_storage': 'denied',
+  'ad_storage': 'denied',
+  'ad_user_data': 'denied',
+  'ad_personalization': 'denied',
+  'functionality_storage': 'denied',
+  'security_storage': 'granted',
+  'wait_for_update': 500
+});
+gtag('set', 'url_passthrough', true);
+`,
+          }}
+        />
+      </head>
+      <body>
+        <ConsentProvider>
+          {children}
+          <ConsentUI />
+        </ConsentProvider>
+      </body>
     </html>
   );
 }
