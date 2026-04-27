@@ -37,7 +37,7 @@ describe("CookiePreferencesModal", () => {
         onClose={vi.fn()}
       />,
     );
-    const necessaryToggle = screen.getByRole("switch", { name: /strictly necessary/i });
+    const necessaryToggle = screen.getByRole("switch", { name: /strictly necessary/i }) as HTMLButtonElement;
     expect(necessaryToggle.disabled).toBe(true);
     expect(necessaryToggle.getAttribute("aria-checked")).toBe("true");
   });

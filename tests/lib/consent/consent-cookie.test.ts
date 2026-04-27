@@ -36,31 +36,29 @@ describe("consent cookie utilities", () => {
   });
 
   it("includes Secure flag in production", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
     const categories: ConsentCategories = {
       necessary: true,
       analytics: false,
       preferences: false,
       marketing: false,
     };
+    (process.env as Record<string, string>).NODE_ENV = "production";
     const value = buildConsentCookieValue(categories);
     expect(value).toContain("Secure");
-    process.env.NODE_ENV = originalEnv;
+    (process.env as Record<string, string>).NODE_ENV = "test";
   });
 
   it("omits Secure flag in development", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
     const categories: ConsentCategories = {
       necessary: true,
       analytics: false,
       preferences: false,
       marketing: false,
     };
+    (process.env as Record<string, string>).NODE_ENV = "development";
     const value = buildConsentCookieValue(categories);
     expect(value).not.toContain("Secure");
-    process.env.NODE_ENV = originalEnv;
+    (process.env as Record<string, string>).NODE_ENV = "test";
   });
 
   it("parses a valid consent cookie payload", () => {
