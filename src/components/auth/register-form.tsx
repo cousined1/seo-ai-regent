@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 
+import { trackSignupCompleted, trackSignupStarted } from "@/lib/analytics/gtm";
 import { tokens } from "@/lib/design/tokens";
 
 function inputStyle() {
@@ -29,6 +30,7 @@ export function RegisterForm() {
     setBusy(true);
     setError(null);
     setMessage(null);
+    trackSignupStarted();
 
     try {
       const response = await fetch("/api/auth/register", {
@@ -49,6 +51,7 @@ export function RegisterForm() {
         return;
       }
 
+      trackSignupCompleted();
       setMessage(`Account created for ${payload.email ?? email}. Sign in to continue.`);
       setName("");
       setEmail("");

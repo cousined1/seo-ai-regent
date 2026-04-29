@@ -5,6 +5,7 @@ export interface ServerEnv {
   authAdminEmail: string | null;
   authAdminPasswordHash: string | null;
   authAdminTotpSecret: string | null;
+  authResetTokenSecret: string | null;
   stripeSecretKey: string | null;
   stripeWebhookSecret: string | null;
   stripeEditorPriceId: string | null;
@@ -30,6 +31,7 @@ export function getServerEnv(
     authAdminEmail: normalizeValue(source.AUTH_ADMIN_EMAIL),
     authAdminPasswordHash: normalizeValue(source.AUTH_ADMIN_PASSWORD_HASH),
     authAdminTotpSecret: normalizeValue(source.AUTH_ADMIN_TOTP_SECRET),
+    authResetTokenSecret: normalizeValue(source.AUTH_RESET_TOKEN_SECRET),
     stripeSecretKey: normalizeValue(source.STRIPE_SECRET_KEY),
     stripeWebhookSecret: normalizeValue(source.STRIPE_WEBHOOK_SECRET),
     stripeEditorPriceId: normalizeValue(source.STRIPE_EDITOR_PRICE_ID),
@@ -48,6 +50,7 @@ export function getConfigErrorMessage(
     | "AUTH_SESSION_SECRET"
     | "STRIPE_SECRET_KEY"
     | "STRIPE_WEBHOOK_SECRET"
+    | "AUTH_RESET_TOKEN_SECRET"
     | "RESEND_API_KEY"
     | "AUTH_RESET_EMAIL_FROM"
     | "NEXT_PUBLIC_SITE_URL",

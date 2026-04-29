@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { ConsentProvider } from "@/components/consent/consent-provider";
 import { ConsentUI } from "@/components/consent/consent-ui";
+import { GtmScript, GtmNoScript } from "@/components/analytics/gtm-script";
+import { RouteChangeTracker } from "@/components/analytics/route-change-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://seoairegent.com"),
@@ -67,9 +69,12 @@ gtag('set', 'url_passthrough', true);
 `,
           }}
         />
+        <GtmScript />
       </head>
       <body>
+        <GtmNoScript />
         <ConsentProvider>
+          <RouteChangeTracker />
           {children}
           <ConsentUI />
         </ConsentProvider>

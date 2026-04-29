@@ -1,0 +1,27 @@
+## Cookie compliance requirements
+
+Implement a production-ready cookie consent and privacy preference system for the public site and app.
+
+Requirements:
+- detect and categorize all cookies and trackers as:
+  - strictly necessary
+  - analytics
+  - preferences
+  - marketing
+- block all non-essential cookies and scripts until valid consent is obtained in jurisdictions that require prior consent
+- show a consent banner with:
+  - Accept All
+  - Reject Non-Essential
+  - Manage Preferences
+- provide a persistent “Cookie Preferences” link in the footer and legal area
+- allow users to withdraw or update consent as easily as they gave it
+- log/store consent choices with timestamp, policy version, and consent categories
+- integrate privacy-policy and cookie-policy disclosures with the actual cookies/scripts used
+- honor Global Privacy Control (GPC) signals where applicable
+- if Google Analytics/Ads/GTM are used, implement Consent Mode with denied defaults until consent is granted
+- ensure strictly necessary cookies can still function without requiring opt-in
+- make the banner accessible by keyboard and screen readers
+- make consent behavior region-aware where practical, especially for EU/EEA and California visitors
+- do not load analytics, marketing, chat tracking, or similar third-party scripts before consent if they are non-essential
+- add a dedicated Cookie Policy page or a clearly labeled cookie section within the Privacy Policy
+- ensure the floating chat widget respects consent if it sets non-essential cookies or tracking technologies

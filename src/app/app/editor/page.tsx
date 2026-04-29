@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CheckoutSuccessTracker } from "@/components/analytics/checkout-success-tracker";
 import { DemoWorkspace } from "@/components/demo/demo-workspace";
 
 export const metadata: Metadata = {
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function EditorPage() {
-  return <DemoWorkspace />;
+  return (
+    <>
+      <CheckoutSuccessTracker />
+      <DemoWorkspace />
+    </>
+  );
 }
