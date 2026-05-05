@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { RelatedLinks } from "@/components/navigation/related-links";
+import { SiteNav } from "@/components/navigation/site-nav";
 import { tokens } from "@/lib/design/tokens";
+import { routes } from "@/lib/routes";
 
 export function AuthShell(props: {
   eyebrow: string;
@@ -21,17 +24,19 @@ export function AuthShell(props: {
   }, []);
 
   return (
-    <main
-      data-e2e-ready={hydrated ? "true" : "false"}
-      style={{
-        minHeight: "100vh",
-        backgroundColor: tokens.colors.background,
-        color: tokens.colors.text,
-        display: "grid",
-        placeItems: "center",
-        padding: "32px 20px",
-      }}
-    >
+    <>
+      <SiteNav />
+      <main
+        data-e2e-ready={hydrated ? "true" : "false"}
+        style={{
+          minHeight: "calc(100vh - 72px)",
+          backgroundColor: tokens.colors.background,
+          color: tokens.colors.text,
+          display: "grid",
+          placeItems: "center",
+          padding: "32px 20px",
+        }}
+      >
       <div
         style={{
           width: "min(520px, 100%)",
@@ -103,7 +108,9 @@ export function AuthShell(props: {
             </Link>
           </div>
         ) : null}
+        <RelatedLinks title="Useful account links" links={[routes.pricing, routes.help, routes.privacy]} />
       </div>
-    </main>
+      </main>
+    </>
   );
 }

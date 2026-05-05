@@ -2,8 +2,12 @@ import React from "react";
 import Link from "next/link";
 import { ComparisonTable } from "@/components/marketing/comparison-table";
 import { LiveDemo } from "@/components/marketing/live-demo";
+import { RelatedLinks } from "@/components/navigation/related-links";
+import { SiteFooter } from "@/components/navigation/site-footer";
+import { SiteNav } from "@/components/navigation/site-nav";
 import { BILLING_PLANS } from "@/lib/billing/plans";
 import { tokens } from "@/lib/design/tokens";
+import { routes } from "@/lib/routes";
 
 export function LandingPage() {
   const socialProof = [
@@ -132,13 +136,15 @@ export function LandingPage() {
   const shellWidth = "min(1360px, calc(100% - 48px))";
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundColor: tokens.colors.background,
-        color: tokens.colors.text,
-      }}
-    >
+    <>
+      <SiteNav />
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: tokens.colors.background,
+          color: tokens.colors.text,
+        }}
+      >
       <section
         style={{
           borderBottom: `1px solid ${tokens.colors.divider}`,
@@ -247,6 +253,7 @@ export function LandingPage() {
       </section>
 
       <section
+        id="features"
         style={{
           padding: "96px 0",
           borderBottom: `1px solid ${tokens.colors.divider}`,
@@ -294,13 +301,18 @@ export function LandingPage() {
             >
               The public surface shows the same product thesis as the editor:
               one scoring brain, two peer outcomes, and an action model that
-              makes the next revision legible.
+              makes the next revision legible. Review the{" "}
+              <Link href={routes.features.href} style={{ color: tokens.colors.primary }}>
+                full feature map
+              </Link>{" "}
+              or open the live demo when you want to inspect the scoring loop directly.
             </p>
           </div>
         </div>
       </section>
 
       <section
+        id="pricing"
         style={{
           padding: "96px 0",
           borderBottom: `1px solid ${tokens.colors.divider}`,
@@ -685,6 +697,22 @@ export function LandingPage() {
             >
               Pricing that maps to editorial operating range.
             </h2>
+            <p
+              style={{
+                margin: "18px 0 0",
+                maxWidth: "720px",
+                color: tokens.colors.textSecondary,
+                fontSize: "17px",
+                lineHeight: 1.6,
+              }}
+            >
+              Compare the dedicated{" "}
+              <Link href={routes.pricing.href} style={{ color: tokens.colors.primary }}>
+                pricing page
+              </Link>{" "}
+              with the FAQ if your team needs to understand plan fit, billing,
+              or support before creating an account.
+            </p>
           </div>
 
           <div
@@ -916,8 +944,8 @@ export function LandingPage() {
             >
               Try live demo
             </a>
-            <a
-              href="/app/editor"
+            <Link
+              href={routes.register.href}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -930,56 +958,27 @@ export function LandingPage() {
                 fontWeight: 600,
               }}
             >
-              Open editor shell
-            </a>
+              Create account
+            </Link>
           </div>
         </div>
       </section>
 
-      <footer
-        style={{
-          borderTop: `1px solid ${tokens.colors.divider}`,
-          padding: "28px 0 42px",
-        }}
-      >
+      <section style={{ padding: "0 0 96px" }}>
         <div
           style={{
             width: shellWidth,
             margin: "0 auto",
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
-          <div
-            style={{
-              color: tokens.colors.textSecondary,
-              fontSize: "14px",
-            }}
-          >
-            SEO AI Regent / Editorial scoring for Google and AI retrieval.
+          <RelatedLinks
+            title="Keep exploring"
+            links={[routes.features, routes.pricing, routes.docs, routes.faq]}
+          />
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              flexWrap: "wrap",
-            }}
-          >
-            <Link href="/privacy" style={{ color: tokens.colors.primary, fontSize: "14px" }}>
-              Privacy
-            </Link>
-            <Link href="/terms" style={{ color: tokens.colors.primary, fontSize: "14px" }}>
-              Terms
-            </Link>
-            <Link href="/cookies" style={{ color: tokens.colors.primary, fontSize: "14px" }}>
-              Cookies
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </main>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

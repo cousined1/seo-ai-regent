@@ -14,6 +14,7 @@ export interface ServerEnv {
   resendApiKey: string | null;
   authResetEmailFrom: string | null;
   siteUrl: string | null;
+  credentialEncryptionKey: string | null;
 }
 
 function normalizeValue(value: string | undefined) {
@@ -40,6 +41,7 @@ export function getServerEnv(
     resendApiKey: normalizeValue(source.RESEND_API_KEY),
     authResetEmailFrom: normalizeValue(source.AUTH_RESET_EMAIL_FROM),
     siteUrl: normalizeValue(source.NEXT_PUBLIC_SITE_URL),
+    credentialEncryptionKey: normalizeValue(source.CREDENTIAL_ENCRYPTION_KEY),
   };
 }
 
@@ -53,7 +55,8 @@ export function getConfigErrorMessage(
     | "AUTH_RESET_TOKEN_SECRET"
     | "RESEND_API_KEY"
     | "AUTH_RESET_EMAIL_FROM"
-    | "NEXT_PUBLIC_SITE_URL",
+    | "NEXT_PUBLIC_SITE_URL"
+    | "CREDENTIAL_ENCRYPTION_KEY",
 ) {
   return `${setting} is not configured. Add ${setting} to the server environment before enabling this integration.`;
 }

@@ -2,7 +2,12 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import { RelatedLinks } from "@/components/navigation/related-links";
+import { SiteFooter } from "@/components/navigation/site-footer";
+import { SiteNav } from "@/components/navigation/site-nav";
 import { tokens } from "@/lib/design/tokens";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -23,14 +28,16 @@ const sectionStyle = {
 
 export default function PrivacyPage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundColor: tokens.colors.background,
-        color: tokens.colors.text,
-        padding: "72px 24px 96px",
-      }}
-    >
+    <>
+      <SiteNav />
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: tokens.colors.background,
+          color: tokens.colors.text,
+          padding: "72px 24px 96px",
+        }}
+      >
       <div
         style={{
           width: "min(760px, 100%)",
@@ -40,18 +47,7 @@ export default function PrivacyPage() {
         }}
       >
         <div style={{ display: "grid", gap: "14px" }}>
-          <Link
-            href="/"
-            style={{
-              color: tokens.colors.primary,
-              fontFamily: tokens.typography.mono,
-              fontSize: "12px",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            SEO AI Regent
-          </Link>
+          <Breadcrumbs items={[routes.privacy]} />
           <h1
             style={{
               margin: 0,
@@ -123,7 +119,10 @@ export default function PrivacyPage() {
             for the full list and your rights.
           </p>
         </section>
+        <RelatedLinks title="Related policies and support" links={[routes.cookies, routes.terms, routes.support]} />
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

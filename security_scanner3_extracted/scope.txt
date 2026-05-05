@@ -1,0 +1,77 @@
+# =============================================================================
+# .security/scope.txt — Phase 8 Authorization List
+# =============================================================================
+#
+# Phase 8 of the security_scanner skill (go-exploit verification) actively
+# fires exploit payloads against targets to confirm vulnerabilities are
+# genuinely exploitable. This file gates which targets are permitted.
+#
+# IMPLICITLY ALLOWED (no need to list):
+#   - 127.0.0.1, ::1                  — loopback
+#   - 10.0.0.0/8                      — RFC1918 private
+#   - 172.16.0.0/12                   — RFC1918 private
+#   - 192.168.0.0/16                  — RFC1918 private
+#   - 169.254.0.0/16                  — link-local
+#   - fc00::/7                        — IPv6 unique local
+#
+# Anything else MUST be listed below before Phase 8 will target it.
+# Targets not on this list are silently skipped; their findings are
+# treated as "assumed exploitable" (fail-closed) by the gate.
+#
+# -----------------------------------------------------------------------------
+# FORMAT
+# -----------------------------------------------------------------------------
+#
+#   <target> [key=value ...]
+#
+# <target> can be:
+#   bare hostname             scan.example.com
+#   hostname:port             scan.example.com:8443
+#   IPv4 / IPv6               203.0.113.5    2001:db8::1
+#   CIDR range                203.0.113.0/24
+#   URL with path scope       https://api.example.com/v1/*
+#
+# Optional metadata (whitespace-separated, key=value):
+#   authorized-by=<email>     who signed off on the test
+#   expires=<YYYY-MM-DD>      after this date, target is silently skipped
+#   ticket=<id>               link to ticketing system (audit trail)
+#   notes=<short text>        free-form (no spaces; use _ or - instead)
+#
+# Lines starting with # are comments. Empty lines are ignored.
+# Expired entries are SKIPPED, not errored — re-authorize before re-adding.
+#
+# -----------------------------------------------------------------------------
+# LEGAL — READ THIS BEFORE ADDING TARGETS
+# -----------------------------------------------------------------------------
+#
+# Active exploitation of systems you do not own or do not have explicit,
+# documented written authorization to test may violate:
+#
+#   - U.S. Computer Fraud and Abuse Act (18 U.S.C. § 1030)
+#   - U.K. Computer Misuse Act 1990
+#   - EU NIS2 Directive / GDPR Article 32 (incident reporting obligations)
+#   - Equivalent statutes in most jurisdictions
+#
+# Violations carry criminal penalties up to and including imprisonment.
+#
+# Authorization MUST be:
+#   1. Written (email is sufficient; verbal is NOT)
+#   2. From someone with legal authority to grant it (CISO, legal, signed SOW)
+#   3. Specific about scope, time window, and permitted techniques
+#   4. Retained as evidence for at least 7 years
+#
+# Reference the authorization in the `ticket=` field. The skill will not
+# verify the authorization; that is your responsibility.
+#
+# =============================================================================
+# AUTHORIZED TARGETS
+# =============================================================================
+
+# Example — replace or remove before use:
+#
+# staging.your-company.com  authorized-by=ciso@your-company.com  expires=2027-01-01  ticket=SEC-1234
+# 198.51.100.0/24           authorized-by=security@your-company.com  expires=2026-12-31  ticket=PEN-2026-Q4
+# https://api.staging.your-company.com/*  authorized-by=ciso@your-company.com  expires=2027-01-01  ticket=SEC-1234  notes=staging_only_no_prod_data
+
+# === Add your authorized targets below this line ===
+

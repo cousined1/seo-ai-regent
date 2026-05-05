@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { headers } from "next/headers";
+
 import "./globals.css";
 import { ConsentProvider } from "@/components/consent/consent-provider";
 import { ConsentUI } from "@/components/consent/consent-ui";
@@ -47,11 +49,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="en">
       <head>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
 window.dataLayer = window.dataLayer || [];
@@ -69,7 +74,7 @@ gtag('set', 'url_passthrough', true);
 `,
           }}
         />
-        <GtmScript />
+        <GtmScript nonce={nonce} />
       </head>
       <body>
         <GtmNoScript />

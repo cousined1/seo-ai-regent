@@ -2,7 +2,12 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import { RelatedLinks } from "@/components/navigation/related-links";
+import { SiteFooter } from "@/components/navigation/site-footer";
+import { SiteNav } from "@/components/navigation/site-nav";
 import { tokens } from "@/lib/design/tokens";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
@@ -56,14 +61,16 @@ const cookieTable = [
 
 export default function CookiesPage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundColor: tokens.colors.background,
-        color: tokens.colors.text,
-        padding: "72px 24px 96px",
-      }}
-    >
+    <>
+      <SiteNav />
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: tokens.colors.background,
+          color: tokens.colors.text,
+          padding: "72px 24px 96px",
+        }}
+      >
       <div
         style={{
           width: "min(760px, 100%)",
@@ -73,18 +80,7 @@ export default function CookiesPage() {
         }}
       >
         <div style={{ display: "grid", gap: "14px" }}>
-          <Link
-            href="/"
-            style={{
-              color: tokens.colors.primary,
-              fontFamily: tokens.typography.mono,
-              fontSize: "12px",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            SEO AI Regent
-          </Link>
+          <Breadcrumbs items={[routes.cookies]} />
           <h1
             style={{
               margin: 0,
@@ -181,7 +177,10 @@ export default function CookiesPage() {
             .
           </p>
         </section>
+        <RelatedLinks title="Related privacy resources" links={[routes.privacy, routes.terms, routes.support]} />
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

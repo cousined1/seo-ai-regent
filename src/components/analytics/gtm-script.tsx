@@ -1,13 +1,14 @@
 import Script from "next/script";
 import { getGtmId } from "@/lib/analytics/gtm";
 
-export function GtmScript() {
+export function GtmScript({ nonce }: { nonce?: string } = {}) {
   const id = getGtmId();
   if (!id) return null;
   return (
     <Script
       id="gtm-loader"
       strategy="afterInteractive"
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

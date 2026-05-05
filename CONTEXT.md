@@ -1,0 +1,141 @@
+# CONTEXT.md — SEO AI Regent Domain Vocabulary
+
+> **Canonical source of truth for all domain terminology.**
+> Update inline when terms sharpen. Do not introduce synonyms.
+
+## Core Entities
+
+### Keyword
+A search query or phrase that users enter into search engines. Stored with optional SERP data, volume, and difficulty metrics.
+_Avoid:_ "search term", "query" (use only when referring to the user input, not the persisted entity)
+
+### Keyword Cluster
+A group of related Keywords organized by shared search intent (informational, transactional, navigational, commercial). Clusters form the basis for content briefs.
+_Avoid:_ "keyword group", "topic cluster" (use only for the higher-level topic authority concept)
+
+### Article
+A piece of content created within SEO AI Regent. Has a title, TipTap JSON content, target Keyword, Content Score, GEO Score, and status (DRAFT, READY, PUBLISHED).
+_Avoid:_ "post", "blog post", "document"
+
+### Content Score
+A 0–100 score measuring traditional SEO quality of an Article. Composed of weighted signals: termFrequency, entityCoverage, headingStructure, wordCount, readability, internalLinks, geoSignals.
+_Avoid:_ "SEO score", "quality score" (too generic)
+
+### GEO Score
+A 0–100 score measuring AI-search visibility and citability of an Article. Composed of weighted signals: entityAuthority, factualDensity, answerFormat, sourceCredibility, freshness.
+_Avoid:_ "AI score", "citation score" (GEO Score is the product term)
+
+### ExplainScore
+The breakdown of a Content Score or GEO Score into individual signal contributions, weights, and statuses (critical, warning, strong). Every score must be explainable.
+_Avoid:_ "score details", "score breakdown"
+
+### Review Gate
+A server-enforced checkpoint that blocks publishing of Articles with Content Score below 70/100. Users must understand why an Article failed and what to fix.
+_Avoid:_ "approval gate", "quality check"
+
+### Publishing Job
+A record of an attempt to publish an Article to a connected CMS. Tracks state (preview, draft, scheduled, published), target platform, and result.
+_Avoid:_ "publish task", "deployment"
+
+### CmsConnection
+A configured integration with an external CMS (WordPress, Webflow, Shopify, Ghost, Notion, or generic webhook). Stores encrypted credentials and OAuth tokens.
+_Avoid:_ "CMS integration", "publishing connection"
+
+### Backlink Opportunity
+A discovered potential link source with provenance, domain authority, and outreach status tracking.
+_Avoid:_ "link prospect", "backlink lead"
+
+### Citation Check
+A scheduled check for whether an Article or domain is cited in AI search engines (ChatGPT, Perplexity, Claude, Gemini). Stores query, timestamp, model, and result snippet.
+_Avoid:_ "AI citation", "GEO check"
+
+### Citation Trend
+An aggregated view of Citation Check results over time, showing gained/lost citations and score movement.
+_Avoid:_ "citation history"
+
+### Rank Tracking
+A scheduled record of a Keyword's search engine position, URL, and SERP features. Supports 7/30/90-day trend views.
+_Avoid:_ "position tracking", "SERP tracking"
+
+### Content Inventory Item
+A record of an existing URL imported from sitemap, CSV, Search Console, or manual entry. Includes crawled metadata (title, headings, meta description, canonical URL, last modified, body text).
+_Avoid:_ "imported page", "existing content"
+
+### Content Brief
+A structured specification for an Article, derived from a Keyword Cluster or Content Inventory Item. Includes SERP evidence, entities, FAQs, internal links, competitor notes, and scoring targets.
+_Avoid:_ "content outline", "article spec"
+
+### Brand Voice Profile
+A reusable set of tone, style, forbidden terms, and formatting rules applied to AI-generated content within a Workspace.
+_Avoid:_ "tone settings", "style guide"
+
+### Technical Seo Issue
+A crawl-detected problem on a verified site (broken links, redirect chains, duplicate titles, missing H1, canonical conflicts, etc.). Has severity (critical, high, medium, low) and lifecycle state (open, ignored, fixed, regressed).
+_Avoid:_ "site error", "crawl issue"
+
+### Competitor
+A tracked domain in a Workspace used for gap analysis, SERP overlap tracking, and content pattern summaries.
+_Avoid:_ "rival", "competing site"
+
+### Internal Link Suggestion
+A recommendation to add an internal link from a source Article/page to a target Article/page, with anchor text, rationale, and confidence.
+_Avoid:_ "link recommendation", "internal link idea"
+
+### Schema Recommendation
+A suggested structured data type (Article, FAQPage, HowTo, Product, Organization, BreadcrumbList, LocalBusiness, WebSite) with JSON-LD preview and validation status.
+_Avoid:_ "structured data suggestion", "markup recommendation"
+
+### Automation Rule
+A user-configured trigger for recurring checks, score thresholds, rank changes, citation changes, audit regressions, publishing reminders, or digest schedules.
+_Avoid:_ "alert rule", "scheduled task"
+
+### Alert
+A notification generated by an Automation Rule. Has states: active, acknowledged, resolved. Links to underlying evidence.
+_Avoid:_ "notification", "warning"
+
+### Workspace
+A container for a user's or organization's SEO projects. Contains Sites, Keywords, Articles, and all related data. Users can have multiple Workspaces.
+_Avoid:_ "project", "account" (account refers to the billing entity)
+
+### Site
+A verified domain or URL within a Workspace. Has verification status, crawl history, and associated Content Inventory Items.
+_Avoid:_ "website", "domain" (use when referring to the DNS record specifically)
+
+### Plan Entitlement
+The feature set and limits associated with a User's billing Plan (FREE, EDITOR, EDITORIAL, SYNDICATE). Enforced server-side.
+_Avoid:_ "subscription tier", "plan limits"
+
+## Relationships
+
+- User → has many → Workspaces (future: via Organization)
+- Workspace → contains many → Sites
+- Workspace → contains many → Keywords
+- Workspace → contains many → Keyword Clusters
+- Workspace → contains many → Articles
+- Workspace → contains many → CmsConnections
+- Workspace → contains many → Competitors
+- Article → belongs to → User (current) / Workspace (future)
+- Article → targets → Keyword
+- Article → has one → Content Score
+- Article → has one → GEO Score
+- Article → may have many → Publishing Jobs
+- Article → may have many → Citation Checks
+- Keyword → may belong to → Keyword Cluster
+- Content Inventory Item → belongs to → Site
+- Technical Seo Issue → belongs to → Site
+- Internal Link Suggestion → references → source Article/page + target Article/page
+- Automation Rule → belongs to → Workspace → generates → Alerts
+
+## Scoring Engine
+
+The scoring engine is the product moat. It consists of:
+- **content-score.ts**: Computes Content Score from 7 weighted signals
+- **geo-score.ts**: Computes GEO Score from 5 weighted signals + citability analysis
+- **citability.ts**: Analyzes passage-level citability (answer block quality, self-containment, structural readability, statistical density, uniqueness signals)
+- **explain-score.ts**: Produces ExplainScore breakdown with contributions and statuses
+- **top-actions.ts**: Derives top 3 improvement actions ranked by potential lift
+- **weights.ts**: Defines contentWeights and geoWeights configuration
+
+## Current State (as of 2026-05-04)
+
+The codebase has a working scoring engine, TipTap editor, auth system, Stripe billing, and heuristic SERP analysis. Missing: Workspace/Organization model, Keyword clustering, Content Inventory, CMS publishing, Backlink tracking, Rank Tracking, Citation Tracking, Technical SEO Audit, Competitor Intelligence, Internal Linking, Schema Recommendations, Automation Rules, Webhooks/API Keys, and Dashboard roll-ups.

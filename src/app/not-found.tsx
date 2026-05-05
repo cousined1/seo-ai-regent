@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { tokens } from "@/lib/design/tokens";
+import { routes } from "@/lib/routes";
 
 export default function NotFound() {
   return (
@@ -51,8 +52,9 @@ export default function NotFound() {
             lineHeight: 1.6,
           }}
         >
-          Return to the landing page or open the live demo to continue reviewing
-          how SEO AI Regent scores content for Google and AI retrieval.
+          Return to the landing page, compare pricing, or open support to
+          continue reviewing how SEO AI Regent scores content for Google and AI
+          retrieval.
         </p>
         <div
           style={{
@@ -62,8 +64,8 @@ export default function NotFound() {
             flexWrap: "wrap",
           }}
         >
-          <Link
-            href="/"
+            <Link
+            href={routes.home.href}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -78,7 +80,7 @@ export default function NotFound() {
             Return home
           </Link>
           <Link
-            href="/demo"
+            href={routes.pricing.href}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -90,7 +92,22 @@ export default function NotFound() {
               fontWeight: 600,
             }}
           >
-            Open live demo
+            View pricing
+          </Link>
+          <Link
+            href={routes.support.href}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "14px 18px",
+              borderRadius: tokens.radius.control,
+              border: `1px solid ${tokens.colors.border}`,
+              color: tokens.colors.text,
+              fontWeight: 600,
+            }}
+          >
+            Contact support
           </Link>
         </div>
       </div>

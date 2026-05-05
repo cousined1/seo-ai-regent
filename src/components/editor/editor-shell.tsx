@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { tokens } from "@/lib/design/tokens";
+import { appNavigation, routes } from "@/lib/routes";
 import { applyPriorityActionSuggestion } from "@/lib/editor/apply-guidance";
 import {
   createActionImpactEntries,
@@ -180,6 +183,11 @@ export function EditorShell({
   initialContent,
   ...railProps
 }: EditorShellProps) {
+  const pathname = usePathname();
+  const workspaceNavigation =
+    pathname === routes.demo.href
+      ? [routes.home, routes.features, routes.pricing, routes.register, routes.help]
+      : appNavigation;
   const draftSessionKey = getDraftSessionKey(keyword, initialContent);
   const initialSessionRef = useRef<DraftSessionState>(loadDraftSession(draftSessionKey));
   const defaultRailState = useMemo<StoredRailState>(
@@ -451,6 +459,7 @@ export function EditorShell({
           justifyContent: "space-between",
           gap: "16px",
           alignItems: "center",
+          flexWrap: "wrap",
           padding: "20px 24px",
           borderBottom: `1px solid ${tokens.colors.divider}`,
         }}
@@ -468,11 +477,49 @@ export function EditorShell({
             Editorial Rail
           </div>
           <div style={{ fontSize: "22px", fontWeight: 600 }}>{keyword}</div>
+          <nav
+            aria-label="Editor breadcrumb"
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+              color: tokens.colors.textFaint,
+              fontFamily: tokens.typography.mono,
+              fontSize: "11px",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            <Link href={routes.home.href} style={{ color: tokens.colors.primary }}>
+              Home
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{pathname === routes.demo.href ? "Live Demo" : "Editor"}</span>
+          </nav>
         </div>
-        <FocusModeToggle
-          enabled={focusMode}
-          onToggle={() => setFocusMode((value) => !value)}
-        />
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          <nav aria-label="Workspace navigation" style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            {workspaceNavigation.map((route) => (
+              <Link
+                key={route.href}
+                href={route.href}
+                style={{
+                  color:
+                    route.href === pathname || (pathname === routes.demo.href && route.href === routes.home.href)
+                      ? tokens.colors.primary
+                      : tokens.colors.textSecondary,
+                  fontSize: "14px",
+                }}
+              >
+                {route.label}
+              </Link>
+            ))}
+          </nav>
+          <FocusModeToggle
+            enabled={focusMode}
+            onToggle={() => setFocusMode((value) => !value)}
+          />
+        </div>
       </header>
 
       <div

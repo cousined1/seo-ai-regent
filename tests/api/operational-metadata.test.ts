@@ -30,9 +30,6 @@ describe("operational production surface", () => {
     expect(rootHeaders?.headers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          key: "Content-Security-Policy",
-        }),
-        expect.objectContaining({
           key: "Referrer-Policy",
           value: "strict-origin-when-cross-origin",
         }),
@@ -47,8 +44,17 @@ describe("operational production surface", () => {
         expect.objectContaining({
           key: "Strict-Transport-Security",
         }),
+        expect.objectContaining({
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(), geolocation=()",
+        }),
       ]),
     );
+
+    const cspHeader = rootHeaders?.headers?.find(
+      (h: { key: string }) => h.key === "Content-Security-Policy",
+    );
+    expect(cspHeader).toBeUndefined();
   });
 
   it("keeps the sitemap focused on public crawl targets only", () => {

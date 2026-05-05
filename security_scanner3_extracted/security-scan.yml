@@ -1,0 +1,471 @@
+# =============================================================================
+# .github/workflows/security-scan.yml
+# =============================================================================
+# Multi-layer pre-deploy security scan. Wires the security_scanner skill
+# end-to-end and gates merges/deploys on the verdict.
+#
+# REPO LAYOUT THIS WORKFLOW EXPECTS:
+#   .security/scripts/aggregate.py
+#   .security/scripts/gate.py
+#   .security/scripts/secret_scan.sh
+#   .security/scope.txt           (only required if running Phase 8)
+#   .security/allowed.txt         (optional: vetted-exception fingerprints)
+#   Dockerfile                    (optional: enables Phases 5 & 6)
+#
+# MODES:
+#   quick — Phases 1-3 (SAST + deps + secrets). Runs on every PR.       ~2-5 min
+#   full  — Quick + Phases 5,6 (container + DAST). Runs on push/nightly. ~10-20 min
+#   deep  — Full + Phase 7 (fuzz + race). Runs on schedule + dispatch.   ~30-60 min
+#
+# Phase 8 (exploit verify) is OPT-IN ONLY via workflow_dispatch input.
+# It will refuse to run unless .security/scope.txt exists.
+# =============================================================================
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # 04:17 UTC daily — odd minute reduces collision with on-the-hour load
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        description: 'Scan depth'
+        options: [quick, full, deep]
+        default: full
+      run_exploit_verify:
+        type: boolean
+        description: 'Phase 8 (requires .security/scope.txt). DO NOT enable without authorization.'
+        default: false
+
+permissions:
+  contents: read
+  security-events: write   # SARIF upload to GitHub code scanning
+  pull-requests: write     # PR comment with verdict
+  actions: read
+
+# Cancel in-progress runs when new commits land on the same ref
+concurrency:
+  group: security-scan-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.23'
+  PYTHON_VERSION: '3.11'
+  # App-under-test config — adjust for your service
+  APP_PORT: 8080
+  APP_HEALTH_PATH: /health
+
+jobs:
+  scan:
+    name: Multi-layer security pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Setup
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for better govulncheck context
+
+      - name: Resolve scan mode
+        id: mode
+        run: |
+          if [[ -n "${{ inputs.mode }}" ]]; then
+            MODE="${{ inputs.mode }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            MODE="quick"
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            MODE="deep"
+          else
+            MODE="full"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved scan mode: $MODE"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache scanner tools
+        id: tool-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/bin
+            ~/.local/bin
+            ~/.local/nuclei-templates
+          key: secscan-tools-${{ runner.os }}-go${{ env.GO_VERSION }}-v4
+
+      - name: Bootstrap scanners
+        if: steps.tool-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euxo pipefail
+          mkdir -p ~/.local/bin
+
+          # Phase 1
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+
+          # Phase 2 — note: osv-scanner's go-install path moved with v2;
+          # if this fails try @latest alone or use the binary release.
+          go install github.com/google/osv-scanner/cmd/osv-scanner/v2@latest \
+            || go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+
+          # Phase 5 — only needed for full/deep
+          if [[ "${{ steps.mode.outputs.mode }}" != "quick" ]]; then
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b ~/.local/bin
+            curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh  | sh -s -- -b ~/.local/bin
+          fi
+
+          # Phase 6 — only needed for full/deep
+          if [[ "${{ steps.mode.outputs.mode }}" != "quick" ]]; then
+            go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+            nuclei -update-templates -silent || true
+          fi
+
+      - name: Add tools to PATH
+        run: |
+          echo "$HOME/go/bin"     >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify scripts present
+        run: |
+          for f in .security/scripts/aggregate.py .security/scripts/gate.py .security/scripts/secret_scan.sh; do
+            [[ -f "$f" ]] || { echo "::error::Missing required script: $f"; exit 1; }
+          done
+          chmod +x .security/scripts/*.sh .security/scripts/*.py
+
+      - name: Setup output dirs
+        run: mkdir -p .security/raw .security/report
+
+      # -----------------------------------------------------------------------
+      # Phase 1 — SAST
+      # -----------------------------------------------------------------------
+      - name: Phase 1.1 — gosec
+        run: |
+          gosec -fmt sarif -out .security/raw/gosec.sarif \
+                -severity medium -confidence medium \
+                -exclude-dir=vendor -exclude-dir=node_modules -exclude-dir=.security \
+                ./... || true
+        continue-on-error: true
+
+      - name: Phase 1.2 — govulncheck
+        run: |
+          govulncheck -format sarif ./... > .security/raw/govulncheck.sarif || true
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Phase 2 — Dependencies
+      # -----------------------------------------------------------------------
+      - name: Phase 2 — osv-scanner
+        run: |
+          osv-scanner --recursive --format sarif --output .security/raw/osv.sarif . || true
+          osv-scanner --recursive --format json  --output .security/raw/osv.json   . || true
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Phase 3 — Secrets + targeted weakness patterns
+      # -----------------------------------------------------------------------
+      - name: Phase 3.1 — secret scan
+        run: |
+          bash .security/scripts/secret_scan.sh . > .security/raw/secrets.json || true
+        continue-on-error: true
+
+      - name: Phase 3.2 — weakness patterns
+        run: |
+          gosec -fmt sarif -out .security/raw/patterns.sarif \
+                -include=G101,G201,G202,G203,G204,G304,G401,G402,G501,G502 \
+                -exclude-dir=vendor -exclude-dir=node_modules \
+                ./... || true
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Phase 5 — Container + SBOM (full/deep only, requires Dockerfile)
+      # -----------------------------------------------------------------------
+      - name: Phase 5.1 — build image
+        if: steps.mode.outputs.mode != 'quick'
+        id: build
+        run: |
+          if [[ -f Dockerfile ]]; then
+            IMAGE="scan-target:${{ github.sha }}"
+            docker build -t "$IMAGE" .
+            echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No Dockerfile found, skipping Phases 5 and 6"
+            echo "image=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Phase 5.2 — syft SBOM
+        if: steps.build.outputs.image != ''
+        run: |
+          syft "${{ steps.build.outputs.image }}" -o cyclonedx-json > .security/raw/sbom.cdx.json
+          syft "${{ steps.build.outputs.image }}" -o spdx-json      > .security/raw/sbom.spdx.json
+        continue-on-error: true
+
+      - name: Phase 5.3 — grype scan
+        if: steps.build.outputs.image != ''
+        run: |
+          grype "${{ steps.build.outputs.image }}" \
+                --output sarif --file .security/raw/grype.sarif \
+                --by-cve --add-cpes-if-none || true
+          grype "${{ steps.build.outputs.image }}" \
+                --output json --file .security/raw/grype.json \
+                --by-cve --add-cpes-if-none || true
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Phase 6 — DAST (full/deep only, requires running container)
+      # -----------------------------------------------------------------------
+      - name: Phase 6.1 — start app container
+        if: steps.mode.outputs.mode != 'quick' && steps.build.outputs.image != ''
+        id: app
+        run: |
+          # Start the app under test as a daemon. Replace env/args as needed.
+          docker run -d --name scan-app -p ${{ env.APP_PORT }}:${{ env.APP_PORT }} \
+            -e APP_ENV=test \
+            "${{ steps.build.outputs.image }}" || echo "::warning::App failed to start"
+
+          # Wait for health (max 60s)
+          for i in $(seq 1 30); do
+            if curl -sf "http://localhost:${{ env.APP_PORT }}${{ env.APP_HEALTH_PATH }}" >/dev/null 2>&1; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Phase 6.2 — nuclei DAST
+        if: steps.app.outputs.ready == 'true'
+        run: |
+          nuclei -u "http://localhost:${{ env.APP_PORT }}" \
+                 -tags cve,exposure,misconfig,default-login \
+                 -severity medium,high,critical \
+                 -rate-limit 50 \
+                 -timeout 5 \
+                 -sarif-export .security/raw/nuclei.sarif \
+                 -json-export  .security/raw/nuclei.json \
+                 -silent || true
+          # Custom templates (if any)
+          if [[ -d .security/templates ]]; then
+            nuclei -u "http://localhost:${{ env.APP_PORT }}" \
+                   -t .security/templates/ \
+                   -sarif-export .security/raw/nuclei-custom.sarif \
+                   -silent || true
+          fi
+        continue-on-error: true
+
+      - name: Phase 6.3 — stop app container
+        if: always() && steps.app.outputs.ready == 'true'
+        run: |
+          docker logs scan-app > .security/raw/app.log 2>&1 || true
+          docker rm -f scan-app || true
+
+      # -----------------------------------------------------------------------
+      # Phase 7 — Fuzz + race (deep only)
+      # -----------------------------------------------------------------------
+      - name: Phase 7 — race detector
+        if: steps.mode.outputs.mode == 'deep'
+        run: |
+          go test -race -count=1 ./... 2>&1 | tee .security/raw/race.log || true
+        continue-on-error: true
+
+      - name: Phase 7 — native fuzz (2 min per target)
+        if: steps.mode.outputs.mode == 'deep'
+        timeout-minutes: 30
+        run: |
+          : > .security/raw/fuzz.log
+          for pkg in $(go list ./...); do
+            FUNCS=$(go test -list 'Fuzz.*' "$pkg" 2>/dev/null | grep '^Fuzz' || true)
+            for fn in $FUNCS; do
+              echo "::group::Fuzz $pkg::$fn"
+              go test "$pkg" -run='^$' -fuzz="^${fn}$" -fuzztime=120s 2>&1 \
+                  | tee -a .security/raw/fuzz.log || true
+              echo "::endgroup::"
+            done
+          done
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Phase 8 — Exploit verification (opt-in only, scope-gated)
+      # -----------------------------------------------------------------------
+      - name: Phase 8.1 — verify scope file
+        if: inputs.run_exploit_verify == true
+        run: |
+          if [[ ! -s .security/scope.txt ]]; then
+            echo "::error::run_exploit_verify=true but .security/scope.txt is missing or empty"
+            echo "::error::Phase 8 fires active exploit payloads — scope file is required"
+            exit 1
+          fi
+          # In CI we additionally restrict to localhost regardless of scope.txt
+          # to prevent accidental targeting of out-of-scope hosts from runners.
+          echo "::notice::Phase 8 will run against http://localhost:${{ env.APP_PORT }} only"
+
+      - name: Phase 8.2 — go-exploit verify
+        if: inputs.run_exploit_verify == true && steps.app.outputs.ready == 'true'
+        run: |
+          go install github.com/vulncheck-oss/go-exploit/cmd/go-exploit@latest
+          # Run a preliminary aggregate to get the candidate CVE list
+          python3 .security/scripts/aggregate.py \
+                  --in .security/raw --out .security/report-pre \
+                  --no-network --target preliminary || true
+          : > .security/raw/verified.json
+          jq -r '.[] | select(.cve != null) | .cve' .security/report-pre/findings.json 2>/dev/null \
+            | sort -u | while read -r cve; do
+              go-exploit -cve "$cve" -target "http://localhost:${{ env.APP_PORT }}" \
+                         -mode check -json >> .security/raw/verified.json 2>/dev/null || true
+            done
+          rm -rf .security/report-pre
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # Aggregator
+      # -----------------------------------------------------------------------
+      - name: Aggregate findings
+        run: |
+          python3 .security/scripts/aggregate.py \
+              --in .security/raw \
+              --out .security/report \
+              --correlate-chains \
+              --check-evasion \
+              --source-root . \
+              --target "${{ github.repository }}@${{ github.sha }}"
+
+      # -----------------------------------------------------------------------
+      # Gate
+      # -----------------------------------------------------------------------
+      - name: Gate verdict
+        id: gate
+        continue-on-error: true
+        run: |
+          # Run gate; capture exit code without failing the step
+          set +e
+          ALLOW_ARGS=""
+          if [[ -f .security/allowed.txt ]]; then
+            ALLOW_ARGS="--allow-file .security/allowed.txt"
+          fi
+          python3 .security/scripts/gate.py \
+              --in .security/report/findings.json \
+              --strict \
+              --out .security/report/verdict.json \
+              $ALLOW_ARGS
+          GATE_EXIT=$?
+          echo "exit_code=$GATE_EXIT" >> "$GITHUB_OUTPUT"
+          VERDICT=$(jq -r .verdict .security/report/verdict.json 2>/dev/null || echo UNKNOWN)
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+
+          # Job summary
+          {
+            echo "## Security Scan Verdict: $VERDICT"
+            echo ""
+            echo "Mode: \`${{ steps.mode.outputs.mode }}\`  |  Exit: \`$GATE_EXIT\`"
+            echo ""
+            cat .security/report/REPORT.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # -----------------------------------------------------------------------
+      # Outputs
+      # -----------------------------------------------------------------------
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('.security/report/findings.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .security/report/findings.sarif
+          category: security_scanner
+
+      - name: Upload raw artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-raw-${{ github.run_id }}
+          path: .security/raw/
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-${{ github.run_id }}
+          path: .security/report/
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Comment verdict on PR
+        if: github.event_name == 'pull_request' && always() && hashFiles('.security/report/verdict.json') != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const verdict = JSON.parse(fs.readFileSync('.security/report/verdict.json', 'utf8'));
+            const report = fs.readFileSync('.security/report/REPORT.md', 'utf8');
+            const emoji = { DEPLOY: '✅', HOLD: '⚠️', REJECT: '🛑' }[verdict.verdict] || '❓';
+            const c = verdict.counts;
+
+            const reasons = (verdict.reasons || []).map(r => `- ${r}`).join('\n');
+            const reasonBlock = reasons ? `\n**Blockers:**\n${reasons}\n` : '';
+
+            // Truncate report if too long (GitHub comment limit ~65k chars)
+            const trimmedReport = report.length > 50000
+              ? report.slice(0, 50000) + '\n\n_...report truncated, full version in workflow artifacts..._'
+              : report;
+
+            const body = [
+              `## ${emoji} Security Scan: ${verdict.verdict}`,
+              '',
+              `**Mode:** \`${{ steps.mode.outputs.mode }}\``,
+              `**Counts:** critical=${c.critical} high=${c.high} KEV=${c.kev} secrets=${c.secrets} verified=${c.verified} chains=${c.chains}`,
+              reasonBlock,
+              `<details><summary>Full report</summary>\n\n${trimmedReport}\n\n</details>`,
+              '',
+              `_Run: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`,
+            ].join('\n');
+
+            // Find existing comment from this workflow to update vs. create new
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' &&
+              /## (✅|⚠️|🛑|❓) Security Scan:/.test(c.body || '')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail on REJECT or HOLD (strict)
+        if: steps.gate.outputs.exit_code != '0'
+        run: |
+          echo "::error::Security gate verdict: ${{ steps.gate.outputs.verdict }} (exit ${{ steps.gate.outputs.exit_code }})"
+          exit ${{ steps.gate.outputs.exit_code }}

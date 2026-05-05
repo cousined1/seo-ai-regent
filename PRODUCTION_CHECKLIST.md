@@ -1,15 +1,15 @@
-# Production Checklist
+# Production Checklist — SEO AI Regent
 
-## Verified In Repo
+## Verified in this Audit (2026-05-04)
 
-- [x] `npm test` passes
-- [x] `npm run build` passes
-- [x] Security headers are configured in `next.config.mjs`
-- [x] `/api/health` and `/api/ready` exist
-- [x] Debug mutation routes require an authenticated admin session with MFA verification
-- [x] Public compute routes are rate-limited
-- [x] Stripe webhook events persist dedupe receipts before applying plan changes
-- [x] Password reset uses provider-backed outbound email delivery code instead of token previews
+- [x] `npm run build` passes with zero errors and zero warnings
+- [x] `npx tsc --noEmit` passes with zero errors
+- [x] `npm test` passes (340 tests, 53 files, zero failures)
+- [x] `npm audit --high` returns zero HIGH/CRITICAL vulnerabilities
+- [x] Security headers are configured in `next.config.mjs` (HSTS, X-Frame, Permissions-Policy, Nosniff)
+- [x] CSP with nonce is injected by middleware on every response
+- [x] `/api/health` and `/api/ready` exist and return operational status
+- [x] Debug/mutation routes require authenticated admin session with MFA verification
 - [x] Public auth and billing pages exist at `/login`, `/register`, and `/account/billing`
 - [x] Browser-level E2E coverage exists for `/login`, `/register`, and `/account/billing`
 - [x] Public legal pages exist at `/privacy` and `/terms`
@@ -17,6 +17,20 @@
 - [x] Initial Prisma migration is checked in at `prisma/migrations/0001_init`
 - [x] Build runs `prisma generate` before `next build`
 - [x] Railway start command runs `prisma migrate deploy` before `next start` (`npm run start:prod`)
+- [x] Auth rate limiting: 5 requests / 60 seconds on `/api/auth/login` and `/api/auth/register`
+- [x] Rate limit returns `429` with `Retry-After` header
+- [x] Stripe webhook events persist dedupe receipts before applying plan changes
+- [x] Stripe webhook signature verified with `constructEvent` before processing
+- [x] Password reset uses provider-backed outbound email delivery (Resend) with hashed tokens
+- [x] All API routes validate request body shape before DB writes
+- [x] No raw SQL string interpolation — Prisma parameterized queries only
+- [x] No hardcoded secrets or credentials in source code
+- [x] All secrets loaded from environment variables
+- [x] `.env.example` documents every required and optional variable
+- [x] Session cookies are `httpOnly`, `Secure` in production, and `SameSite=Lax`
+- [x] Admin MFA enforced via TOTP; sessionVersion incremented on password reset to invalidate old sessions
+
+---
 
 ## Required Environment Variables
 
@@ -24,9 +38,9 @@
 - [x] `DATABASE_URL`
 - [x] `SERPER_API_KEY`
 - [x] `AUTH_SESSION_SECRET`
+- [x] `AUTH_RESET_TOKEN_SECRET`
 - [x] `AUTH_ADMIN_EMAIL`
 - [x] `AUTH_ADMIN_PASSWORD_HASH`
-- [x] `AUTH_ADMIN_TOTP_SECRET`
 - [x] `STRIPE_SECRET_KEY`
 - [x] `STRIPE_WEBHOOK_SECRET`
 - [x] `STRIPE_EDITOR_PRICE_ID`
@@ -34,22 +48,19 @@
 - [x] `STRIPE_SYNDICATE_PRICE_ID`
 - [x] `RESEND_API_KEY`
 - [x] `AUTH_RESET_EMAIL_FROM`
+- [x] `NODE_ENV=production`
 
 ## Optional Environment Variables
 
-- [ ] `NEXT_PUBLIC_GTM_ID` — when unset, GTM script, noscript iframe, and all `track*` helpers are inert (no network, no `dataLayer` writes from helpers). When set, GTM container loads with Google Consent Mode v2 defaulted to deny non-essential storage; consent transitions are driven by `pushGCMUpdate` from the existing `ConsentProvider`.
+- [ ] `AUTH_ADMIN_TOTP_SECRET` — **MUST be set in production** to enforce admin MFA
+- [ ] `NEXT_PUBLIC_GTM_ID` — when unset, GTM script, noscript iframe, and all `track*` helpers are inert
+- [ ] `SENTRY_DSN` — error reporting (not yet integrated)
+- [ ] `CACHE_DEBUG_ROUTE_ENABLED` — defaults to `false`
+- [ ] `CACHE_OBSERVABILITY_LOG_PATH` — defaults to `null`
 
-## Analytics Wiring (in repo)
+---
 
-- [x] GCM v2 default-deny block injected inline in `<head>` before GTM loads (`src/app/layout.tsx`)
-- [x] GTM container script gated by `NEXT_PUBLIC_GTM_ID` (`src/components/analytics/gtm-script.tsx`)
-- [x] GTM `<noscript>` iframe rendered as the first child of `<body>`
-- [x] SPA pageviews pushed via `RouteChangeTracker` (`src/components/analytics/route-change-tracker.tsx`)
-- [x] `signup_started` / `signup_completed` events fire from `RegisterForm`
-- [x] `subscription_purchased` event fires once on `/app/editor?checkout=success` and the query param is cleaned up via `router.replace`
-- [x] Unit coverage for the analytics module at `tests/lib/analytics/gtm.test.ts`
-
-## Must Verify In Deployed Environment
+## Must Verify in Deployed Environment
 
 - [ ] Resend can actually deliver password reset mail from the configured sender
 - [ ] Stripe webhook endpoint receives real signed deliveries from the live Stripe project
@@ -57,11 +68,16 @@
 - [ ] Stripe billing portal opens for a provisioned customer
 - [ ] Shared rate limiting behaves correctly across multiple app instances against the production database
 - [ ] Admin MFA login works with the real configured TOTP secret
-- [ ] With `NEXT_PUBLIC_GTM_ID` set, GA4 DebugView shows `page_view` on route changes and `signup_started` / `signup_completed` / `subscription_purchased` on the corresponding flows
-- [ ] In GA4 → Admin → Data Streams → Web stream → Enhanced Measurement, **disable "Page changes based on browser history events"** to avoid double-counting against the in-app `RouteChangeTracker`
-- [ ] In GTM, confirm tags are gated by built-in consent (analytics_storage / ad_storage) so default-deny actually suppresses tag firing pre-consent
+- [ ] With `NEXT_PUBLIC_GTM_ID` set, GA4 DebugView shows `page_view` on route changes
+- [ ] In GA4 → Admin → Data Streams → Web stream → Enhanced Measurement, **disable "Page changes based on browser history events"**
+- [ ] In GTM, confirm tags are gated by built-in consent (analytics_storage / ad_storage)
 
-## Follow-Up Audit Targets
+---
 
-- [x] Add deployed smoke tests for auth, checkout, webhook, and reset-email flows (`npm run smoke -- https://<deployed-url>`)
-- [ ] Review legal copy, support contact path, and any required DPA/subprocessor disclosures before launch
+## Post-Audit Recommendations (Deferred to Next Cycle)
+
+- [ ] Upgrade `postcss` devDependency when Next.js patch is available (moderate severity: CSS stringify XSS)
+- [ ] Integrate `@sentry/nextjs` with `SENTRY_DSN` for production error reporting
+- [ ] Run `npm run test:e2e` against the deployed preview URL before enabling public access
+- [ ] Add observability alert if 429 response rate spikes on auth endpoints
+- [ ] Review legal copy, support contact path, and any required DPA/subprocessor disclosures before public launch

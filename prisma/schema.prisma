@@ -25,6 +25,141 @@ enum ArticleStatus {
   PUBLISHED
 }
 
+enum Intent {
+  INFORMATIONAL
+  TRANSACTIONAL
+  NAVIGATIONAL
+  COMMERCIAL
+}
+
+enum SiteStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum VerificationMethod {
+  HTML_TAG
+  DNS_TXT
+  FILE_UPLOAD
+}
+
+enum CrawlJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum CmsPlatform {
+  WORDPRESS
+  WEBFLOW
+  SHOPIFY
+  GHOST
+  NOTION
+  WEBHOOK
+}
+
+enum PublishingJobStatus {
+  PREVIEW
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+enum IssueSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum IssueState {
+  OPEN
+  IGNORED
+  FIXED
+  REGRESSED
+}
+
+enum SyncStatus {
+  CONNECTING
+  CONNECTED
+  SYNCING
+  SYNCED
+  ERROR
+  DISCONNECTED
+}
+
+enum OpportunityType {
+  HIGH_IMPRESSION_LOW_CTR
+  DECLINING_PAGE
+  CANNIBALIZED_QUERY
+  POSITION_4_TO_10
+  NEW_QUERY
+}
+
+enum CompetitorPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum LinkSuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  INSERTED
+}
+
+enum CitationEngine {
+  CHATGPT
+  PERPLEXITY
+  CLAUDE
+  GEMINI
+  COPILOT
+}
+
+enum OutreachStatus {
+  IDENTIFIED
+  CONTACT_FOUND
+  OUTREACH_SENT
+  FOLLOW_UP_SENT
+  RESPONDED
+  LINK_ACQUIRED
+  DECLINED
+  IGNORED
+}
+
+enum SchemaType {
+  ARTICLE
+  FAQ
+  HOW_TO
+  PRODUCT
+  REVIEW
+  BREADCRUMB
+  ORGANIZATION
+  PERSON
+  EVENT
+  LOCAL_BUSINESS
+}
+
+enum ImportSource {
+  SITEMAP
+  CSV
+  MANUAL
+  SEARCH_CONSOLE
+}
+
+enum BriefStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
 model User {
   id              String               @id @default(cuid())
   email           String               @unique
@@ -37,6 +172,7 @@ model User {
   sessionVersion  Int                  @default(1)
   plan            Plan                 @default(FREE)
   stripeId        String?              @unique
+  ownedWorkspaces Workspace[]
   articles        Article[]
   audits          Audit[]
   keywords        Keyword[]
@@ -46,27 +182,185 @@ model User {
   updatedAt       DateTime             @updatedAt
 }
 
+model Workspace {
+  id          String    @id @default(cuid())
+  name        String
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id])
+  sites       Site[]
+  keywords    Keyword[]
+  clusters    KeywordCluster[]
+  cmsConnections CmsConnection[]
+  searchConsoleConnections SearchConsoleConnection[]
+  competitors Competitor[]
+  internalLinkSuggestions InternalLinkSuggestion[]
+  opportunities SearchConsoleOpportunity[]
+  citationChecks CitationCheck[]
+  citationTrends CitationTrend[]
+  backlinkOpportunities BacklinkOpportunity[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ownerId])
+}
+
+model Site {
+  id             String            @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id])
+  url            String
+  status         SiteStatus        @default(PENDING)
+  verifiedAt     DateTime?
+  verification   SiteVerification?
+  crawlJobs      CrawlJob[]
+  crawledUrls    CrawledUrl[]
+  inventoryItems ContentInventoryItem[]
+  auditRuns      AuditRun[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([workspaceId, url])
+  @@index([workspaceId])
+}
+
+model SiteVerification {
+  id          String             @id @default(cuid())
+  siteId      String             @unique
+  site        Site               @relation(fields: [siteId], references: [id])
+  method      VerificationMethod
+  token       String
+  verifiedAt  DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([siteId])
+}
+
+model CrawlJob {
+  id          String          @id @default(cuid())
+  siteId      String
+  site        Site            @relation(fields: [siteId], references: [id])
+  status      CrawlJobStatus  @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  urlCount    Int             @default(0)
+  error       String?
+  crawledUrls CrawledUrl[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([siteId])
+  @@index([status])
+}
+
+model CrawledUrl {
+  id           String    @id @default(cuid())
+  siteId       String
+  site         Site      @relation(fields: [siteId], references: [id])
+  crawlJobId   String?
+  crawlJob     CrawlJob? @relation(fields: [crawlJobId], references: [id])
+  url          String
+  title        String?
+  statusCode   Int?
+  lastCrawledAt DateTime @default(now())
+
+  @@unique([siteId, url])
+  @@index([siteId])
+  @@index([crawlJobId])
+}
+
+model KeywordCluster {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  name        String
+  intent      Intent
+  keywords    Keyword[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([intent])
+}
+
+model ContentInventoryItem {
+  id              String          @id @default(cuid())
+  siteId          String
+  site            Site            @relation(fields: [siteId], references: [id])
+  url             String          @unique
+  title           String?
+  metaDescription String?
+  canonicalUrl    String?
+  lastModified    DateTime?
+  bodyText        String?
+  importedFrom    ImportSource    @default(MANUAL)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  scoreSnapshots  ContentScoreSnapshot[]
+  briefs          ContentBrief[]
+
+  @@index([siteId])
+  @@index([importedFrom])
+}
+
+model ContentScoreSnapshot {
+  id              String    @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   ContentInventoryItem @relation(fields: [inventoryItemId], references: [id])
+  contentScore    Int
+  geoScore        Int
+  wordCount       Int
+  readability     Float?
+  scoreBreakdown  Json?
+  snapshotDate    DateTime  @default(now())
+
+  @@index([inventoryItemId])
+  @@index([snapshotDate])
+}
+
+model ContentBrief {
+  id              String      @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   ContentInventoryItem @relation(fields: [inventoryItemId], references: [id])
+  recommendations Json
+  targetScore     Int
+  status          BriefStatus @default(DRAFT)
+  articles        Article[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([inventoryItemId])
+  @@index([status])
+}
+
 model Article {
-  id             String        @id @default(cuid())
-  userId         String
-  title          String
-  content        Json
-  keyword        String
-  contentScore   Int           @default(0)
-  geoScore       Int?
-  wordCount      Int           @default(0)
-  readability    Float?
-  status         ArticleStatus @default(DRAFT)
-  serpData       Json?
-  nlpTerms       Json?
-  scoreBreakdown Json?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  user           User          @relation(fields: [userId], references: [id])
-  audits         Audit[]
+  id              String        @id @default(cuid())
+  userId          String
+  title           String
+  content         Json
+  keyword         String
+  contentScore    Int           @default(0)
+  geoScore        Int?
+  wordCount       Int           @default(0)
+  readability     Float?
+  status          ArticleStatus @default(DRAFT)
+  publishEligible Boolean       @default(false)
+  briefId         String?
+  brief           ContentBrief? @relation(fields: [briefId], references: [id])
+  serpData        Json?
+  nlpTerms        Json?
+  scoreBreakdown  Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id])
+  audits          Audit[]
+  publishingJobs  PublishingJob[]
+  schemaRecommendations SchemaRecommendation[]
 
   @@index([userId])
   @@index([keyword])
+  @@index([briefId])
+  @@index([publishEligible])
 }
 
 model Audit {
@@ -85,16 +379,27 @@ model Audit {
 }
 
 model Keyword {
-  id        String   @id @default(cuid())
-  userId    String?
-  query     String
-  serpData  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User?    @relation(fields: [userId], references: [id])
+  id          String        @id @default(cuid())
+  userId      String?
+  workspaceId String?
+  clusterId   String?
+  query       String
+  intent      Intent?
+  volume      Int?
+  difficulty  Int?
+  serpData    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User?         @relation(fields: [userId], references: [id])
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id])
+  cluster     KeywordCluster? @relation(fields: [clusterId], references: [id])
+  rankTrackings RankTracking[]
 
   @@index([userId])
+  @@index([workspaceId])
+  @@index([clusterId])
   @@index([query])
+  @@index([intent])
 }
 
 model ScoreSnapshot {
@@ -132,6 +437,303 @@ model StripeWebhookEvent {
 
   @@index([userId])
   @@index([processedAt])
+}
+
+model CmsConnection {
+  id                String       @id @default(cuid())
+  workspaceId       String
+  workspace         Workspace    @relation(fields: [workspaceId], references: [id])
+  platform          CmsPlatform
+  name              String
+  siteUrl           String
+  encryptedCredentials Json
+  status            String       @default("active")
+  connectedAt       DateTime     @default(now())
+  lastTestedAt      DateTime?
+  publishingJobs    PublishingJob[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([workspaceId])
+  @@index([platform])
+}
+
+model PublishingJob {
+  id              String              @id @default(cuid())
+  articleId       String
+  article         Article             @relation(fields: [articleId], references: [id])
+  cmsConnectionId String
+  cmsConnection   CmsConnection       @relation(fields: [cmsConnectionId], references: [id])
+  status          PublishingJobStatus @default(PREVIEW)
+  publishedUrl    String?
+  publishedAt     DateTime?
+  error           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([articleId])
+  @@index([cmsConnectionId])
+  @@index([status])
+}
+
+model AuditRun {
+  id          String   @id @default(cuid())
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id])
+  status      String   @default("running")
+  urlCount    Int      @default(0)
+  issueCount  Int      @default(0)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  error       String?
+  issues      TechnicalSeoIssue[]
+  createdAt   DateTime @default(now())
+
+  @@index([siteId])
+  @@index([status])
+}
+
+model TechnicalSeoIssue {
+  id          String        @id @default(cuid())
+  auditRunId  String
+  auditRun    AuditRun      @relation(fields: [auditRunId], references: [id])
+  url         String
+  type        String
+  severity    IssueSeverity
+  state       IssueState    @default(OPEN)
+  title       String
+  description String?
+  suggestion  String?
+  firstSeen   DateTime      @default(now())
+  lastSeen    DateTime      @default(now())
+  resolvedAt  DateTime?
+
+  @@index([auditRunId])
+  @@index([severity])
+  @@index([state])
+  @@index([url])
+}
+
+model SearchConsoleConnection {
+  id              String       @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace    @relation(fields: [workspaceId], references: [id])
+  propertyUrl     String
+  encryptedTokens Json
+  syncStatus      SyncStatus   @default(CONNECTING)
+  lastSyncAt      DateTime?
+  data            SearchConsoleData[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([workspaceId])
+  @@index([syncStatus])
+  @@unique([workspaceId, propertyUrl])
+}
+
+model SearchConsoleData {
+  id              String                @id @default(cuid())
+  connectionId    String
+  connection      SearchConsoleConnection @relation(fields: [connectionId], references: [id])
+  query           String
+  page            String
+  impressions     Int
+  clicks          Int
+  ctr             Float
+  position        Float
+  date            DateTime
+  createdAt       DateTime              @default(now())
+
+  @@index([connectionId])
+  @@index([query])
+  @@index([page])
+  @@index([date])
+}
+
+model SearchConsoleOpportunity {
+  id          String        @id @default(cuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id])
+  type        OpportunityType
+  query       String
+  page        String
+  metric      String
+  value       Float
+  rationale   String
+  status      String        @default("new")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([workspaceId])
+  @@index([type])
+  @@index([status])
+}
+
+model Competitor {
+  id          String             @id @default(cuid())
+  workspaceId String
+  workspace   Workspace          @relation(fields: [workspaceId], references: [id])
+  domain      String
+  market      String?
+  priority    CompetitorPriority @default(MEDIUM)
+  notes       String?
+  snapshots   CompetitorSnapshot[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([workspaceId, domain])
+  @@index([workspaceId])
+  @@index([priority])
+}
+
+model CompetitorSnapshot {
+  id              String     @id @default(cuid())
+  competitorId    String
+  competitor      Competitor @relation(fields: [competitorId], references: [id])
+  keywords        Json
+  contentPatterns Json?
+  topPages        Json?
+  crawledAt       DateTime   @default(now())
+  createdAt       DateTime   @default(now())
+
+  @@index([competitorId])
+  @@index([crawledAt])
+}
+
+model InternalLinkSuggestion {
+  id          String              @id @default(cuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id])
+  sourceId    String
+  sourceType  String
+  targetId    String
+  targetType  String
+  anchorText  String
+  rationale   String
+  confidence  Float
+  status      LinkSuggestionStatus @default(PENDING)
+  context     String?
+  scoreImpact Int?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([confidence])
+}
+
+model RankTracking {
+  id                  String   @id @default(cuid())
+  keywordId           String
+  keyword             Keyword  @relation(fields: [keywordId], references: [id])
+  position            Int
+  url                 String?
+  serpFeatures        Json?
+  competitorPosition  Int?
+  competitorUrl       String?
+  checkedAt           DateTime @default(now())
+  createdAt           DateTime @default(now())
+
+  @@index([keywordId])
+  @@index([checkedAt])
+  @@index([position])
+}
+
+model CitationCheck {
+  id        String         @id @default(cuid())
+  workspaceId String
+  workspace Workspace      @relation(fields: [workspaceId], references: [id])
+  query     String
+  engine    CitationEngine
+  found     Boolean
+  position  Int?
+  snippet   String?
+  url       String?
+  checkedAt DateTime       @default(now())
+  createdAt DateTime       @default(now())
+
+  @@index([workspaceId])
+  @@index([query])
+  @@index([engine])
+  @@index([checkedAt])
+}
+
+model CitationTrend {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  query       String
+  engine      CitationEngine
+  citationScore Float
+  totalChecks Int
+  foundCount  Int
+  avgPosition Float?
+  period      String
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([query])
+  @@index([engine])
+  @@index([period])
+}
+
+model BacklinkOpportunity {
+  id              String        @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id])
+  sourceUrl       String
+  sourceDomain    String
+  targetUrl       String?
+  domainAuthority Int?
+  pageAuthority   Int?
+  relevance       String?
+  provenance      String
+  contactEmail    String?
+  contactName     String?
+  status          OutreachStatus @default(IDENTIFIED)
+  notes           String?
+  outreachLogs    OutreachLog[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([domainAuthority])
+  @@index([sourceDomain])
+}
+
+model OutreachLog {
+  id            String        @id @default(cuid())
+  opportunityId String
+  opportunity   BacklinkOpportunity @relation(fields: [opportunityId], references: [id])
+  status        OutreachStatus
+  notes         String?
+  template      String?
+  sentAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  @@index([opportunityId])
+  @@index([sentAt])
+}
+
+model SchemaRecommendation {
+  id          String     @id @default(cuid())
+  articleId   String
+  article     Article    @relation(fields: [articleId], references: [id])
+  schemaType  SchemaType
+  jsonLd      Json
+  valid       Boolean?
+  errors      Json?
+  explanation String?
+  applied     Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  validatedAt DateTime?
+
+  @@index([articleId])
+  @@index([schemaType])
+  @@index([valid])
 }
 
 model RateLimitWindow {
