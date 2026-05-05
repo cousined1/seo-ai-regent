@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { HeroVideo } from "@/components/marketing/hero-video";
 import { ComparisonTable } from "@/components/marketing/comparison-table";
 import { LiveDemo } from "@/components/marketing/live-demo";
 import { RelatedLinks } from "@/components/navigation/related-links";
@@ -147,12 +148,17 @@ export function LandingPage() {
       >
       <section
         style={{
+          position: "relative",
           borderBottom: `1px solid ${tokens.colors.divider}`,
           padding: "120px 0 96px",
+          overflow: "hidden",
         }}
       >
+        <HeroVideo src="/assets/hero-bg.mp4" />
         <div
           style={{
+            position: "relative",
+            zIndex: 2,
             width: shellWidth,
             margin: "0 auto",
             display: "grid",
